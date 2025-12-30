@@ -1,21 +1,23 @@
-const Course = require('../models/Course');
+const Pathway = require('../models/Pathway');
 const { GRADE_POINTS } = require('./smsParser');
 
 async function matchCourses(subjects, clusters, meanGrade) {
     try {
-        const allCourses = await Course.find({ isActive: true }).sort({ type: 1, name: 1 });
-        const eligibleCourses = [];
+        const allPathways = await Pathway.find().sort({ name: 1 });
+        const eligiblePathways = [];
 
-        for (const course of allCourses) {
-            const requirements = course.requirements || {};
+        for (const pathway of allPathways) {
+            const requirements = pathway.requirements || {};
             let eligible = true;
 
+            // 1. Mean Grade Check
             if (requirements.min_mean_grade) {
                 const minPoints = GRADE_POINTS[requirements.min_mean_grade];
                 const currentPoints = GRADE_POINTS[meanGrade];
                 if (currentPoints < minPoints) eligible = false;
             }
 
+            // 2. Cluster Points Check (If available)
             if (requirements.cluster_number && requirements.min_cluster_points) {
                 const cluster = clusters.find(c => c.number === requirements.cluster_number);
                 if (!cluster || parseFloat(cluster.points) < requirements.min_cluster_points) {
@@ -23,8 +25,9 @@ async function matchCourses(subjects, clusters, meanGrade) {
                 }
             }
 
-            if (requirements.required_subjects) {
-                for (const [code, minGrade] of Object.entries(requirements.required_subjects)) {
+            // 3. Subject Requirements Check
+            if (requirements.subject_requirements && requirements.subject_requirements.size > 0) {
+                for (const [code, minGrade] of pathway.requirements.subject_requirements.entries()) {
                     const subject = subjects.find(s => s.code === code);
                     if (!subject || GRADE_POINTS[subject.grade] < GRADE_POINTS[minGrade]) {
                         eligible = false;
@@ -34,21 +37,18 @@ async function matchCourses(subjects, clusters, meanGrade) {
             }
 
             if (eligible) {
-                eligibleCourses.push({
-                    name: course.name,
-                    type: course.type,
-                    institution: course.institution,
-                    description: course.description,
-                    requirements: course.requirementsText,
-                    duration: course.duration,
-                    career_paths: course.careerPaths
+                eligiblePathways.push({
+                    name: pathway.name,
+                    description: pathway.description,
+                    requirements: `Min ${requirements.min_mean_grade || 'C+'} overall`,
+                    career_paths: pathway.careerPaths
                 });
             }
         }
 
-        return eligibleCourses;
+        return eligiblePathways;
     } catch (error) {
-        console.error('Course matching error:', error);
+        console.error('Pathway matching error:', error);
         return [];
     }
 }
@@ -77,27 +77,19 @@ function getAlternativeRoutes(careerName) {
     return alternatives[careerName] || 'TVET diploma and certificate programs, bridging courses';
 }
 
-function generateCareerRecommendations(clusters, courses) {
+function generateCareerRecommendations(clusters, pathways) {
     const careers = [];
     const careerMap = new Map();
 
-    courses.forEach(course => {
-        if (course.career_paths) {
-            // Mongoose array will already be an array
-            const paths = course.career_paths;
-            paths.forEach(careerPath => {
+    pathways.forEach(pathway => {
+        if (pathway.career_paths) {
+            pathway.career_paths.forEach(careerPath => {
                 if (!careerMap.has(careerPath)) {
                     careerMap.set(careerPath, {
-                        courses: [],
-                        institutions: new Set()
+                        courses: []
                     });
                 }
-                careerMap.get(careerPath).courses.push(course.name);
-                if (course.institution) {
-                    course.institution.split(',').forEach(inst => {
-                        careerMap.get(careerPath).institutions.add(inst.trim());
-                    });
-                }
+                careerMap.get(careerPath).courses.push(pathway.name);
             });
         }
     });
@@ -106,13 +98,12 @@ function generateCareerRecommendations(clusters, courses) {
         careers.push({
             name: careerName,
             description: getCareerDescription(careerName),
-            institutions: Array.from(data.institutions).join(', '),
             suggested_courses: data.courses.slice(0, 3),
             alternatives: getAlternativeRoutes(careerName)
         });
     });
 
-    return careers.slice(0, 5);
+    return careers; // Return all, frontend will slice
 }
 
 module.exports = { matchCourses, generateCareerRecommendations };

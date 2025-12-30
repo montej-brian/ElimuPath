@@ -1,5 +1,26 @@
-function calculateClusters(subjects) {
+function calculateClusters(subjects, gradingPoints) {
     const clusters = [];
+    const t = gradingPoints || 0; // t = student's grade points (grading total)
+    const T = 84; // T = max grade points (7 * 12)
+    const R = 48; // R = max cluster points (4 * 12)
+
+    // Formula: C = sqrt( (r/R) * (t/T) ) * 48
+
+    const calculateC = (clusterSubjects) => {
+        let r = 0;
+        let subjectsStr = [];
+        for (const s of clusterSubjects) {
+            r += s.points;
+            subjectsStr.push(s.name);
+        }
+
+        // C = sqrt( (r/48) * (t/84) ) * 48
+        const clusterPoints = Math.sqrt((r / R) * (t / T)) * 48;
+        return {
+            points: clusterPoints.toFixed(3), // Standard is usually 3dp
+            subjects: subjectsStr.join(', ')
+        };
+    };
 
     const findSubject = (codes) => {
         for (const code of codes) {
@@ -13,13 +34,16 @@ function calculateClusters(subjects) {
     const mat = findSubject(['MAT']);
     const bio = findSubject(['BIO', 'PHY']);
     const chem = findSubject(['CHEM', 'PHY']);
+    const phy = findSubject(['PHY', 'CHEM', 'BIO']);
 
+    // 1. Science Cluster (Eng + Mat + Bio + Chem)
     if (eng && mat && bio && chem) {
+        const result = calculateC([eng, mat, bio, chem]);
         clusters.push({
             number: 1,
             name: 'Science Cluster',
-            subjects: `${eng.name}, ${mat.name}, ${bio.name}, ${chem.name}`,
-            points: (eng.points + mat.points + bio.points + chem.points).toFixed(2),
+            points: result.points,
+            subjects: result.subjects,
             description: 'Engineering, Medicine, Pure Sciences'
         });
     }
@@ -27,37 +51,42 @@ function calculateClusters(subjects) {
     const kis = findSubject(['KIS']);
     const humanities = findSubject(['HIST', 'GEO', 'CRE', 'IRE', 'HRE']);
 
+    // 2. Arts Cluster (Eng + Kis + Mat + Hum)
     if (eng && kis && mat && humanities) {
+        const result = calculateC([eng, kis, mat, humanities]);
         clusters.push({
             number: 2,
             name: 'Arts/Humanities Cluster',
-            subjects: `${eng.name}, ${kis.name}, ${mat.name}, ${humanities.name}`,
-            points: (eng.points + kis.points + mat.points + humanities.points).toFixed(2),
+            points: result.points,
+            subjects: result.subjects,
             description: 'Education, Law, Social Sciences'
         });
     }
 
     const bst = findSubject(['BST', 'GEO', 'HIST', 'CRE']);
 
+    // 3. Business Cluster (Eng + Mat + Kis + Bst/Hum)
     if (eng && mat && kis && bst) {
+        const result = calculateC([eng, mat, kis, bst]);
         clusters.push({
             number: 3,
             name: 'Business/Technical Cluster',
-            subjects: `${eng.name}, ${mat.name}, ${kis.name}, ${bst.name}`,
-            points: (eng.points + mat.points + kis.points + bst.points).toFixed(2),
+            points: result.points,
+            subjects: result.subjects,
             description: 'Business, Economics, Technical Courses'
         });
     }
 
-    const phy = findSubject(['PHY', 'CHEM', 'BIO']);
     const tech = findSubject(['COMP', 'AGRI', 'PHY', 'CHEM']);
 
+    // 4. Tech Cluster (Eng + Mat + Phy + Tech)
     if (eng && mat && phy && tech) {
+        const result = calculateC([eng, mat, phy, tech]);
         clusters.push({
             number: 4,
             name: 'Technical/Applied Cluster',
-            subjects: `${eng.name}, ${mat.name}, ${phy.name}, ${tech.name}`,
-            points: (eng.points + mat.points + phy.points + tech.points).toFixed(2),
+            points: result.points,
+            subjects: result.subjects,
             description: 'Engineering Technology, IT, Agriculture'
         });
     }

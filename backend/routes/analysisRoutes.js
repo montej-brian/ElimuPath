@@ -34,10 +34,17 @@ router.post('/parse-results', async (req, res) => {
         // Duplicate check
         const existingAnalysis = await Analysis.findOne({ resultsHash: parsed.resultsHash });
         if (existingAnalysis) {
-            return res.status(409).json({ error: 'These results have already been analyzed.' });
+            // Updated to allow re-viewing the same analysis
+            return res.json({
+                analysisId: existingAnalysis._id,
+                preview: {
+                    meanGrade: existingAnalysis.meanGrade,
+                    meanPoints: existingAnalysis.meanPoints
+                }
+            });
         }
 
-        const clusters = calculateClusters(parsed.subjects);
+        const clusters = calculateClusters(parsed.subjects, parsed.clusterTP);
 
         const analysis = await Analysis.create({
             resultsHash: parsed.resultsHash,
@@ -84,6 +91,7 @@ router.get('/analysis/:analysisId', async (req, res) => {
             meanGrade,
             meanPoints: analysis.meanPoints,
             interpretation: getMeanGradeInterpretation(meanGrade),
+            totalPoints: analysis.totalPoints, // Return AGP
             clusters,
             courses,
             careers

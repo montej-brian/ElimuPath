@@ -6,11 +6,41 @@ const FullAnalysis = ({ analysisId }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Display slices
+    const [displayCourses, setDisplayCourses] = useState([]);
+    const [displayCareers, setDisplayCareers] = useState([]);
+
+    const shuffleArray = (array) => {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    };
+
+    const handleRegenerateCourses = () => {
+        if (results && results.courses) {
+            setDisplayCourses(shuffleArray(results.courses).slice(0, 10));
+        }
+    };
+
+    const handleRegenerateCareers = () => {
+        if (results && results.careers) {
+            setDisplayCareers(shuffleArray(results.careers).slice(0, 10));
+        }
+    };
+
     useEffect(() => {
         const loadAnalysis = async () => {
             try {
                 const response = await apiGetFullAnalysis(analysisId);
-                setResults(response.data);
+                const data = response.data;
+                setResults(data);
+
+                // Initial slice
+                if (data.courses) setDisplayCourses(shuffleArray(data.courses).slice(0, 10));
+                if (data.careers) setDisplayCareers(shuffleArray(data.careers).slice(0, 5));
             } catch (err) {
                 setError('Failed to load analysis results.');
             } finally {
@@ -62,6 +92,7 @@ const FullAnalysis = ({ analysisId }) => {
                         <div>
                             <div className="text-sm text-gray-600 mb-2">Overall Performance</div>
                             <div className="text-3xl font-bold text-green-600 mb-2">{results.meanGrade}</div>
+                            <div className="text-sm font-semibold text-gray-700 mb-2">Total AGP: {results.totalPoints}</div>
                             <p className="text-sm text-gray-600">{results.interpretation}</p>
                         </div>
                     </div>
@@ -81,31 +112,49 @@ const FullAnalysis = ({ analysisId }) => {
                 </div>
 
                 <div className="bg-white rounded-lg shadow-lg p-6">
-                    <h2 className="text-xl font-bold mb-4">Eligible Courses</h2>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-bold">Eligible Degree Pathways</h2>
+                        <button
+                            onClick={handleRegenerateCourses}
+                            className="text-sm px-3 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+                        >
+                            Regenerate
+                        </button>
+                    </div>
                     <div className="space-y-4">
-                        {results.courses.length > 0 ? results.courses.map((course, idx) => (
+                        {displayCourses.length > 0 ? displayCourses.map((course, idx) => (
                             <div key={idx} className="p-4 border-l-4 border-green-600 bg-gray-50 rounded">
                                 <div className="font-bold text-lg">{course.name}</div>
-                                <div className="text-sm text-gray-600">{course.type} • {course.institution}</div>
-                                <div className="text-sm mt-2">{course.description}</div>
+                                <div className="text-sm text-gray-600">
+                                    {course.type || 'Degree'} Pathway
+                                </div>
+                                <p className="text-sm mt-2 text-gray-700">{course.description}</p>
                                 <div className="text-xs text-gray-500 mt-2">Requirements: {course.requirements}</div>
                             </div>
                         )) : (
-                            <p className="text-sm text-gray-600">No matching courses found for your current results.</p>
+                            <p className="text-sm text-gray-600">No matching pathways found.</p>
                         )}
                     </div>
                 </div>
 
                 <div className="bg-white rounded-lg shadow-lg p-6">
-                    <h2 className="text-xl font-bold mb-4">Career Pathways</h2>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-bold">Career Recommendations</h2>
+                        <button
+                            onClick={handleRegenerateCareers}
+                            className="text-sm px-3 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+                        >
+                            Regenerate
+                        </button>
+                    </div>
                     <div className="space-y-4">
-                        {results.careers.length > 0 ? results.careers.map((career, idx) => (
+                        {displayCareers.length > 0 ? displayCareers.map((career, idx) => (
                             <div key={idx} className="p-4 bg-blue-50 rounded-lg">
                                 <div className="font-bold text-lg">{career.name}</div>
                                 <p className="text-sm text-gray-700 mt-2">{career.description}</p>
                                 <div className="mt-3">
-                                    <div className="text-xs font-semibold text-gray-600 mb-1">Suggested Institutions:</div>
-                                    <div className="text-sm text-gray-600">{career.institutions}</div>
+                                    <div className="text-xs font-semibold text-gray-600 mb-1">Common Degrees:</div>
+                                    <div className="text-sm text-gray-600">{career.suggested_courses?.join(', ')}</div>
                                 </div>
                                 {career.alternatives && (
                                     <div className="mt-2 text-xs text-gray-600">
@@ -121,8 +170,8 @@ const FullAnalysis = ({ analysisId }) => {
 
                 <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
                     <p className="text-sm text-gray-700">
-                        <strong>Important:</strong> This analysis is for guidance only. Always verify course requirements
-                        with institutions directly and follow official KUCCPS placement procedures.
+                        <strong>Important:</strong> This analysis is for guidance only. Always verify requirements
+                        officially and follow KUCCPS placement procedures.
                     </p>
                 </div>
             </div>

@@ -32,7 +32,7 @@ const analysisSchema = new mongoose.Schema({
     },
     isPaid: {
         type: Boolean,
-        default: false // Reverting to original default, override in logic if needed
+        default: true // Payment disabled for testing
     },
     paymentDate: {
         type: Date

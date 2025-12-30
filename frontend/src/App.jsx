@@ -13,7 +13,7 @@ export default function App() {
   const handleAnalyze = (id, previewData) => {
     setAnalysisId(id);
     setPreview(previewData);
-    setStage('preview');
+    setStage('analysis'); // Skip preview/payment for testing
   };
 
   return (

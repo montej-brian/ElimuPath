@@ -8,6 +8,28 @@ const GRADE_POINTS = {
     'E': 1
 };
 
+// Grading Scales (Min Score for each grade)
+const GRADING_SCALES = {
+    // Group I: Compulsory
+    'ENG': { 'A': 80, 'A-': 75, 'B+': 70, 'B': 65, 'B-': 60, 'C+': 55, 'C': 50, 'C-': 45, 'D+': 40, 'D': 35, 'D-': 30, 'E': 0 },
+    'KIS': { 'A': 78, 'A-': 73, 'B+': 68, 'B': 63, 'B-': 58, 'C+': 53, 'C': 48, 'C-': 43, 'D+': 38, 'D': 33, 'D-': 28, 'E': 0 },
+    'MAT': { 'A': 70, 'A-': 65, 'B+': 60, 'B': 55, 'B-': 49, 'C+': 43, 'C': 37, 'C-': 31, 'D+': 25, 'D': 19, 'D-': 12, 'E': 0 },
+
+    // Group II: Sciences
+    'BIO': { 'A': 80, 'A-': 75, 'B+': 70, 'B': 65, 'B-': 60, 'C+': 55, 'C': 50, 'C-': 45, 'D+': 40, 'D': 35, 'D-': 30, 'E': 0 },
+    'PHY': { 'A': 60, 'A-': 55, 'B+': 50, 'B': 45, 'B-': 40, 'C+': 35, 'C': 30, 'C-': 25, 'D+': 20, 'D': 15, 'D-': 10, 'E': 0 },
+    'CHEM': { 'A': 65, 'A-': 60, 'B+': 55, 'B': 50, 'B-': 45, 'C+': 40, 'C': 35, 'C-': 30, 'D+': 25, 'D': 20, 'D-': 15, 'E': 0 },
+
+    // Group III: Humanities & Technical
+    'HIST': { 'A': 80, 'A-': 75, 'B+': 70, 'B': 65, 'B-': 60, 'C+': 55, 'C': 50, 'C-': 45, 'D+': 40, 'D': 35, 'D-': 30, 'E': 0 },
+    'GEO': { 'A': 66, 'A-': 61, 'B+': 56, 'B': 51, 'B-': 46, 'C+': 41, 'C': 36, 'C-': 31, 'D+': 26, 'D': 21, 'D-': 16, 'E': 0 },
+    'CRE': { 'A': 90, 'A-': 85, 'B+': 80, 'B': 75, 'B-': 70, 'C+': 65, 'C': 60, 'C-': 55, 'D+': 50, 'D': 45, 'D-': 40, 'E': 0 },
+    'AGRI': { 'A': 88, 'A-': 83, 'B+': 78, 'B': 73, 'B-': 68, 'C+': 63, 'C': 58, 'C-': 53, 'D+': 48, 'D': 43, 'D-': 38, 'E': 0 },
+
+    // Default (using English/History/Biology scale as standard)
+    'DEFAULT': { 'A': 80, 'A-': 75, 'B+': 70, 'B': 65, 'B-': 60, 'C+': 55, 'C': 50, 'C-': 45, 'D+': 40, 'D': 35, 'D-': 30, 'E': 0 }
+};
+
 function getSubjectName(code) {
     const subjects = {
         'ENG': 'English',
@@ -49,34 +71,111 @@ function pointsToGrade(avgPoints) {
     return 'E';
 }
 
+function scoreToGrade(subjectCode, score) {
+    const scale = GRADING_SCALES[subjectCode] || GRADING_SCALES['DEFAULT'];
+    const numericScore = parseFloat(score);
+
+    if (numericScore >= scale['A']) return 'A';
+    if (numericScore >= scale['A-']) return 'A-';
+    if (numericScore >= scale['B+']) return 'B+';
+    if (numericScore >= scale['B']) return 'B';
+    if (numericScore >= scale['B-']) return 'B-';
+    if (numericScore >= scale['C+']) return 'C+';
+    if (numericScore >= scale['C']) return 'C';
+    if (numericScore >= scale['C-']) return 'C-';
+    if (numericScore >= scale['D+']) return 'D+';
+    if (numericScore >= scale['D']) return 'D';
+    if (numericScore >= scale['D-']) return 'D-';
+    return 'E';
+}
+
+function calculateKCSEStats(subjects) {
+    // 1. Total AGP (All subjects)
+    const agp = subjects.reduce((sum, s) => sum + s.points, 0);
+
+    // 2. Identify Grading Subjects (Math + Best Lang + Best 5 Others)
+    const math = subjects.find(s => s.code === 'MAT');
+    // Languages: English, Kiswahili
+    const languages = subjects.filter(s => ['ENG', 'KIS'].includes(s.code));
+
+    // Sort languages by points desc
+    languages.sort((a, b) => b.points - a.points);
+    const bestLanguage = languages[0];
+
+    // Determine subjects grading used
+    const usedCodes = new Set();
+    if (math) usedCodes.add(math.code);
+    if (bestLanguage) usedCodes.add(bestLanguage.code);
+
+    // Filter remaining subjects for grading (Best 5 of rest)
+    const remainingSubjects = subjects.filter(s => !usedCodes.has(s.code));
+    remainingSubjects.sort((a, b) => b.points - a.points);
+
+    // Take best 5 for Grading Mean
+    const best5Others = remainingSubjects.slice(0, 5);
+
+    // Calculate Grading Mean Points (Max 84 base)
+    let gradingPoints = 0;
+    let divisor = 0;
+
+    if (math) { gradingPoints += math.points; divisor++; }
+    if (bestLanguage) { gradingPoints += bestLanguage.points; divisor++; }
+
+    best5Others.forEach(s => {
+        gradingPoints += s.points;
+        divisor++;
+    });
+
+    const meanPoints = divisor > 0 ? gradingPoints / divisor : 0;
+    const meanGrade = pointsToGrade(meanPoints);
+
+    // 3. Identify Cluster Calculation "t" (Best 5 Overall, Max 60)
+    // Sort ALL subjects by points descending
+    const allSorted = [...subjects].sort((a, b) => b.points - a.points);
+    const best5Points = allSorted.slice(0, 5).reduce((sum, s) => sum + s.points, 0);
+
+    return { agp, gradingPoints, meanPoints, meanGrade, best5Points };
+}
+
 function parseSMS(smsText) {
     try {
         const text = smsText.toUpperCase().trim();
-        const subjectPattern = /([A-Z]{2,4})\s*[-:]?\s*([A-E][+-]?)/g;
+        const subjectPattern = /([A-Z]{2,4})\s*[-:]?\s*([A-E][+-]?|\d{1,3})/g;
         const subjects = [];
         let match;
 
         while ((match = subjectPattern.exec(text)) !== null) {
-            const subject = match[1].trim();
-            const grade = match[2].trim();
+            const subjectCode = match[1].trim();
+            const value = match[2].trim();
+            let grade, points;
 
-            if (GRADE_POINTS[grade]) {
-                subjects.push({
-                    code: subject,
-                    name: getSubjectName(subject),
-                    grade: grade,
-                    points: GRADE_POINTS[grade]
-                });
+            if (GRADE_POINTS[value]) {
+                grade = value;
+                points = GRADE_POINTS[grade];
+            } else if (!isNaN(value)) {
+                grade = scoreToGrade(subjectCode, value);
+                points = GRADE_POINTS[grade];
+            } else {
+                continue;
             }
+
+            subjects.push({
+                code: subjectCode,
+                name: getSubjectName(subjectCode),
+                grade: grade,
+                points: points
+            });
         }
 
-        if (subjects.length < 7) {
-            throw new Error('Could not parse sufficient subjects. Please check SMS format.');
+        if (subjects.length < 5) {
+            // Relaxed check
         }
 
-        const totalPoints = subjects.reduce((sum, s) => sum + s.points, 0);
-        const avgPoints = totalPoints / subjects.length;
-        const meanGrade = pointsToGrade(avgPoints);
+        if (subjects.length === 0) {
+            throw new Error('No valid subjects found. Format: SUBJ:GRADE or SUBJ:SCORE');
+        }
+
+        const stats = calculateKCSEStats(subjects);
 
         const resultsHash = crypto
             .createHash('sha256')
@@ -85,9 +184,11 @@ function parseSMS(smsText) {
 
         return {
             subjects,
-            meanGrade,
-            meanPoints: avgPoints.toFixed(2),
-            totalPoints,
+            meanGrade: stats.meanGrade,
+            meanPoints: stats.meanPoints.toFixed(2),
+            gradingPoints: stats.gradingPoints,
+            clusterTP: stats.best5Points,       // 't' for Cluster Calc (Best 5, Max 60)
+            totalPoints: stats.agp,             // AGP
             resultsHash,
             rawText: text
         };
