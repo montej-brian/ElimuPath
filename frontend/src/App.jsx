@@ -5,6 +5,7 @@ import PreviewLocked from './components/PreviewLocked';
 import Payment from './components/Payment';
 import FullAnalysis from './components/FullAnalysis';
 import SplashScreen from './components/SplashScreen';
+import AdminDashboard from './components/AdminDashboard';
 
 export default function App() {
   const [stage, setStage] = useState('landing'); // landing, input, preview, payment, analysis
@@ -88,6 +89,20 @@ export default function App() {
               analysisId={analysisId}
               onBack={() => navigateTo('input')}
             />
+          )}
+          {stage === 'admin' && (
+            <AdminDashboard onBack={() => navigateTo('landing')} />
+          )}
+          {/* Subtle Admin Portal */}
+          {stage === 'landing' && (
+            <div className="fixed bottom-4 right-4 opacity-5 hover:opacity-100 transition-opacity">
+              <button
+                onClick={() => navigateTo('admin')}
+                className="text-[10px] text-gray-400 uppercase tracking-widest"
+              >
+                Management
+              </button>
+            </div>
           )}
         </>
       )}

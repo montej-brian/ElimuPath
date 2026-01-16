@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const analysisRoutes = require('./routes/analysisRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const connectDB = require('./config/db');
 
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api', analysisRoutes);
 app.use('/api', paymentRoutes);
+app.use('/api', adminRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
