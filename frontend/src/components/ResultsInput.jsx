@@ -52,12 +52,7 @@ const ResultsInput = ({ onAnalyze, onBack }) => {
                     <textarea
                         value={smsText}
                         onChange={(e) => setSmsText(e.target.value)}
-                        placeholder="Paste your complete KCSE result SMS here. Example:
-
-KCSE Results 2024
-Index: 12345678
-ENG C+, KIS B, MAT B-, BIO B+, CHEM C+, PHY B, HIST B-, GEO C+, CRE B
-Mean Grade: B"
+                        placeholder="Paste your complete KCSE result here. Example: ENGLISH C+, KISWAHILI B, MATHEMATICS B-, BIOLOGY B+, CHEMISTRY C+, PHYSICS B, HISTORY B-, GEOGRAPHY C+, CRE B"
                         className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     <div className="mt-4 p-4 bg-blue-50 rounded-lg">
