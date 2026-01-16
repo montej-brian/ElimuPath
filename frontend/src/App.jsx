@@ -4,11 +4,13 @@ import ResultsInput from './components/ResultsInput';
 import PreviewLocked from './components/PreviewLocked';
 import Payment from './components/Payment';
 import FullAnalysis from './components/FullAnalysis';
+import SplashScreen from './components/SplashScreen';
 
 export default function App() {
   const [stage, setStage] = useState('landing'); // landing, input, preview, payment, analysis
   const [analysisId, setAnalysisId] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [showSplash, setShowSplash] = useState(true);
 
   const handleAnalyze = (id, previewData) => {
     setAnalysisId(id);
@@ -18,34 +20,40 @@ export default function App() {
 
   return (
     <div>
-      {stage === 'landing' && (
-        <LandingPage onGetStarted={() => setStage('input')} />
-      )}
-      {stage === 'input' && (
-        <ResultsInput
-          onAnalyze={handleAnalyze}
-          onBack={() => setStage('landing')}
-        />
-      )}
-      {stage === 'preview' && (
-        <PreviewLocked
-          preview={preview}
-          onPay={() => setStage('payment')}
-          onBack={() => setStage('input')}
-        />
-      )}
-      {stage === 'payment' && (
-        <Payment
-          analysisId={analysisId}
-          onSuccess={() => setStage('analysis')}
-          onBack={() => setStage('preview')}
-        />
-      )}
-      {stage === 'analysis' && (
-        <FullAnalysis
-          analysisId={analysisId}
-          onBack={() => setStage('input')}
-        />
+      {showSplash ? (
+        <SplashScreen onFinish={() => setShowSplash(false)} />
+      ) : (
+        <>
+          {stage === 'landing' && (
+            <LandingPage onGetStarted={() => setStage('input')} />
+          )}
+          {stage === 'input' && (
+            <ResultsInput
+              onAnalyze={handleAnalyze}
+              onBack={() => setStage('landing')}
+            />
+          )}
+          {stage === 'preview' && (
+            <PreviewLocked
+              preview={preview}
+              onPay={() => setStage('payment')}
+              onBack={() => setStage('input')}
+            />
+          )}
+          {stage === 'payment' && (
+            <Payment
+              analysisId={analysisId}
+              onSuccess={() => setStage('analysis')}
+              onBack={() => setStage('preview')}
+            />
+          )}
+          {stage === 'analysis' && (
+            <FullAnalysis
+              analysisId={analysisId}
+              onBack={() => setStage('input')}
+            />
+          )}
+        </>
       )}
     </div>
   );
