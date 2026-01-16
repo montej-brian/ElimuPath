@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getFullAnalysis as apiGetFullAnalysis } from '../services/api';
+import Logo from './brand/Logo';
+import Loader from './brand/Loader';
 
 const FullAnalysis = ({ analysisId }) => {
     const [results, setResults] = useState(null);
@@ -52,8 +54,8 @@ const FullAnalysis = ({ analysisId }) => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <Loader text="Generating your career pathway..." />
             </div>
         );
     }
@@ -70,6 +72,7 @@ const FullAnalysis = ({ analysisId }) => {
         <div className="min-h-screen bg-gray-50">
             <header className="bg-white shadow-sm">
                 <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6">
+                    <Logo className="h-8 mb-2" />
                     <h1 className="text-2xl font-bold">Your Complete Career Analysis</h1>
                 </div>
             </header>
@@ -77,35 +80,68 @@ const FullAnalysis = ({ analysisId }) => {
             <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 space-y-6">
                 <div className="bg-white rounded-lg shadow-lg p-6">
                     <h2 className="text-xl font-bold mb-4">Academic Summary</h2>
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <div className="text-sm text-gray-600 mb-2">Subject Grades</div>
-                            <div className="space-y-1">
-                                {results.subjects.map((sub, idx) => (
-                                    <div key={idx} className="flex justify-between">
-                                        <span>{sub.name}:</span>
-                                        <span className="font-semibold">{sub.grade}</span>
-                                    </div>
-                                ))}
+                    <div className="grid md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                            <div>
+                                <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">Core Foundation</div>
+                                <div className="space-y-1">
+                                    {results.subjects.filter(s => s.group === 'Core Foundation').map((sub, idx) => (
+                                        <div key={idx} className="flex justify-between items-center py-1 border-b border-gray-50 last:border-0">
+                                            <span className="text-gray-700">{sub.name}</span>
+                                            <span className="font-bold text-gray-900">{sub.grade}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Elective / Other Subjects</div>
+                                <div className="space-y-1">
+                                    {results.subjects.filter(s => s.group !== 'Core Foundation').map((sub, idx) => (
+                                        <div key={idx} className="flex justify-between items-center py-1 border-b border-gray-50 last:border-0">
+                                            <span className="text-gray-600">{sub.name}</span>
+                                            <span className="font-semibold text-gray-800">{sub.grade}</span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
-                        <div>
-                            <div className="text-sm text-gray-600 mb-2">Overall Performance</div>
-                            <div className="text-3xl font-bold text-green-600 mb-2">{results.meanGrade}</div>
-                            <div className="text-sm font-semibold text-gray-700 mb-2">Total AGP: {results.totalPoints}</div>
-                            <p className="text-sm text-gray-600">{results.interpretation}</p>
+                        <div className="bg-green-50 rounded-xl p-6 flex flex-col justify-center border border-green-100">
+                            <div className="text-sm text-green-800 font-medium mb-1">Overall Performance</div>
+                            <div className="text-5xl font-black text-green-600 mb-2">{results.meanGrade}</div>
+                            <div className="text-lg font-bold text-gray-700 mb-2">
+                                Mean Points: {results.meanPoints}
+                                <span className="text-sm font-normal text-gray-500 ml-2">(Aggregate: {results.totalPoints})</span>
+                            </div>
+                            <p className="text-gray-700 leading-relaxed italic">"{results.interpretation}"</p>
                         </div>
                     </div>
                 </div>
 
                 <div className="bg-white rounded-lg shadow-lg p-6">
-                    <h2 className="text-xl font-bold mb-4">Cluster Points</h2>
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <h2 className="text-xl font-bold mb-4">Cluster Weighted Points</h2>
+                    <div className="grid md:grid-cols-2 gap-6">
                         {results.clusters.map((cluster, idx) => (
-                            <div key={idx} className="p-4 bg-gradient-to-br from-green-50 to-blue-50 rounded-lg">
-                                <div className="text-sm text-gray-600">{cluster.name}</div>
-                                <div className="text-3xl font-bold text-green-600">{cluster.points}</div>
-                                <div className="text-xs text-gray-500 mt-1">{cluster.subjects}</div>
+                            <div key={idx} className="relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-blue-100/50 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
+                                <div className="relative p-5 bg-white border border-gray-100 rounded-xl hover:shadow-md transition-shadow">
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div>
+                                            <div className="text-xs font-bold text-blue-600 uppercase tracking-widest">{cluster.name}</div>
+                                            <div className="text-xs text-gray-500">{cluster.description}</div>
+                                        </div>
+                                        <div className="text-2xl font-black text-blue-700">{cluster.points}</div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2 mt-4">
+                                        {cluster.breakdown && Object.entries(cluster.breakdown).map(([key, sub]) => (
+                                            <div key={key} className="flex items-center space-x-2 bg-gray-50 px-2 py-1 rounded text-[10px]">
+                                                <span className="font-bold text-blue-400">{key}:</span>
+                                                <span className="text-gray-600 truncate">{sub.name}</span>
+                                                <span className="font-bold text-gray-900 ml-auto">{sub.grade}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -165,6 +201,45 @@ const FullAnalysis = ({ analysisId }) => {
                         )) : (
                             <p className="text-sm text-gray-600">No career recommendations available.</p>
                         )}
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow-lg p-6">
+                    <h2 className="text-xl font-bold mb-4">Official Grading System Reference</h2>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left text-gray-500">
+                            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th className="px-4 py-3">Grade</th>
+                                    <th className="px-4 py-3">Points</th>
+                                    <th className="px-4 py-3">KNEC Mean Point Range</th>
+                                    <th className="px-4 py-3">Descriptor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {[
+                                    { grade: 'A', points: 12, range: '11.5 - 12.0', desc: 'Plain' },
+                                    { grade: 'A-', points: 11, range: '10.5 - 11.4', desc: 'Minus' },
+                                    { grade: 'B+', points: 10, range: '9.5 - 10.4', desc: 'Plus' },
+                                    { grade: 'B', points: 9, range: '8.5 - 9.4', desc: 'Plain' },
+                                    { grade: 'B-', points: 8, range: '7.5 - 8.4', desc: 'Minus' },
+                                    { grade: 'C+', points: 7, range: '6.5 - 7.4', desc: 'Plus' },
+                                    { grade: 'C', points: 6, range: '5.5 - 6.4', desc: 'Plain' },
+                                    { grade: 'C-', points: 5, range: '4.5 - 5.4', desc: 'Minus' },
+                                    { grade: 'D+', points: 4, range: '3.5 - 4.4', desc: 'Plus' },
+                                    { grade: 'D', points: 3, range: '2.5 - 3.4', desc: 'Plain' },
+                                    { grade: 'D-', points: 2, range: '1.5 - 2.4', desc: 'Minus' },
+                                    { grade: 'E', points: 1, range: '1.0 - 1.4', desc: 'Plain' },
+                                ].map((item) => (
+                                    <tr key={item.grade} className="border-b hover:bg-gray-50">
+                                        <td className="px-4 py-2 font-bold text-gray-900">{item.grade}</td>
+                                        <td className="px-4 py-2">{item.points}</td>
+                                        <td className="px-4 py-2">{item.range}</td>
+                                        <td className="px-4 py-2 text-xs">{item.desc}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 

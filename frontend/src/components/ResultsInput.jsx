@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { parseResults as apiParseResults } from '../services/api';
+import Logo from './brand/Logo';
 
 const ResultsInput = ({ onAnalyze, onBack }) => {
     const [smsText, setSmsText] = useState('');
@@ -32,6 +33,7 @@ const ResultsInput = ({ onAnalyze, onBack }) => {
                     <button onClick={onBack} className="text-blue-600 hover:text-blue-700 mb-2">
                         ← Back
                     </button>
+                    <Logo className="h-8 mb-2" />
                     <h1 className="text-2xl font-bold">Paste Your KCSE Results</h1>
                 </div>
             </header>

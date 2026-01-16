@@ -1,5 +1,6 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
+import Logo from './brand/Logo';
 
 const PreviewLocked = ({ preview, onPay, onBack }) => (
     <div className="min-h-screen bg-gray-50">
@@ -8,6 +9,7 @@ const PreviewLocked = ({ preview, onPay, onBack }) => (
                 <button onClick={onBack} className="text-blue-600 hover:text-blue-700 mb-2">
                     ← Back
                 </button>
+                <Logo className="h-8 mb-2" />
                 <h1 className="text-2xl font-bold">Your Results Preview</h1>
             </div>
         </header>

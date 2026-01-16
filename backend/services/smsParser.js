@@ -140,7 +140,9 @@ function calculateKCSEStats(subjects) {
 function parseSMS(smsText) {
     try {
         const text = smsText.toUpperCase().trim();
-        const subjectPattern = /([A-Z]{2,4})\s*[-:]?\s*([A-E][+-]?|\d{1,3})/g;
+        // Use a whitelist of common codes to avoid false positives from words like "GRADE" or "KCSE"
+        const commonCodes = ['ENG', 'KIS', 'MAT', 'BIO', 'CHEM', 'PHY', 'HIST', 'GEO', 'CRE', 'IRE', 'HRE', 'COMP', 'AGRI', 'HSCI', 'ART', 'MUSIC', 'FREN', 'GERM', 'ARAB', 'BST'];
+        const subjectPattern = new RegExp(`\\b(${commonCodes.join('|')})\\s*[-:]?\\s*([A-E][+-]?|\\d{1,3})`, 'g');
         const subjects = [];
         let match;
 
@@ -163,9 +165,13 @@ function parseSMS(smsText) {
                 code: subjectCode,
                 name: getSubjectName(subjectCode),
                 grade: grade,
-                points: points
+                points: points,
+                group: ['ENG', 'KIS', 'MAT'].includes(subjectCode) ? 'Core Foundation' : 'Elective/Other'
             });
         }
+
+        // Sort subjects from highest to lowest grade (points)
+        subjects.sort((a, b) => b.points - a.points);
 
         if (subjects.length < 5) {
             // Relaxed check
@@ -187,7 +193,7 @@ function parseSMS(smsText) {
             meanGrade: stats.meanGrade,
             meanPoints: stats.meanPoints.toFixed(2),
             gradingPoints: stats.gradingPoints,
-            clusterTP: stats.best5Points,       // 't' for Cluster Calc (Best 5, Max 60)
+            clusterTP: stats.gradingPoints,     // 't' for Cluster Calc (Aggregate of 7, Max 84)
             totalPoints: stats.agp,             // AGP
             resultsHash,
             rawText: text

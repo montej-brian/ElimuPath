@@ -8,17 +8,22 @@ function calculateClusters(subjects, gradingPoints) {
 
     const calculateC = (clusterSubjects) => {
         let r = 0;
-        let subjectsStr = [];
-        for (const s of clusterSubjects) {
-            r += s.points;
-            subjectsStr.push(s.name);
-        }
+        let breakdown = {};
 
-        // C = sqrt( (r/48) * (t/84) ) * 48
+        clusterSubjects.forEach((s, idx) => {
+            r += s.points;
+            breakdown[`S${idx + 1}`] = {
+                name: s.name,
+                grade: s.grade,
+                points: s.points
+            };
+        });
+
         const clusterPoints = Math.sqrt((r / R) * (t / T)) * 48;
         return {
-            points: clusterPoints.toFixed(3), // Standard is usually 3dp
-            subjects: subjectsStr.join(', ')
+            points: clusterPoints.toFixed(3),
+            breakdown: breakdown,
+            subjects: clusterSubjects.map(s => s.name).join(', ')
         };
     };
 
@@ -43,6 +48,7 @@ function calculateClusters(subjects, gradingPoints) {
             number: 1,
             name: 'Science Cluster',
             points: result.points,
+            breakdown: result.breakdown,
             subjects: result.subjects,
             description: 'Engineering, Medicine, Pure Sciences'
         });
@@ -58,6 +64,7 @@ function calculateClusters(subjects, gradingPoints) {
             number: 2,
             name: 'Arts/Humanities Cluster',
             points: result.points,
+            breakdown: result.breakdown,
             subjects: result.subjects,
             description: 'Education, Law, Social Sciences'
         });
@@ -72,6 +79,7 @@ function calculateClusters(subjects, gradingPoints) {
             number: 3,
             name: 'Business/Technical Cluster',
             points: result.points,
+            breakdown: result.breakdown,
             subjects: result.subjects,
             description: 'Business, Economics, Technical Courses'
         });
@@ -86,6 +94,7 @@ function calculateClusters(subjects, gradingPoints) {
             number: 4,
             name: 'Technical/Applied Cluster',
             points: result.points,
+            breakdown: result.breakdown,
             subjects: result.subjects,
             description: 'Engineering Technology, IT, Agriculture'
         });

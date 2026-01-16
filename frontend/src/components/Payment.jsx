@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initiatePayment as apiInitiatePayment, getPaymentStatus as apiGetPaymentStatus } from '../services/api';
+import Loader from './brand/Loader';
 
 const Payment = ({ analysisId, onSuccess, onBack }) => {
     const [phone, setPhone] = useState('');
@@ -93,7 +94,7 @@ const Payment = ({ analysisId, onSuccess, onBack }) => {
                     </>
                 ) : (
                     <div className="text-center py-8">
-                        <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+                        <Loader text="Waiting for M-PESA payment..." />
                         <h3 className="text-xl font-bold mb-2">Waiting for Payment</h3>
                         <p className="text-gray-600 mb-4">
                             Please check your phone for the M-PESA prompt and enter your PIN.
