@@ -42,7 +42,10 @@ export default function App() {
         />
       )}
       {stage === 'analysis' && (
-        <FullAnalysis analysisId={analysisId} />
+        <FullAnalysis
+          analysisId={analysisId}
+          onBack={() => setStage('input')}
+        />
       )}
     </div>
   );

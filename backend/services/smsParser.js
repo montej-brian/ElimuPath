@@ -11,20 +11,28 @@ const GRADE_POINTS = {
 // Grading Scales (Min Score for each grade)
 const GRADING_SCALES = {
     // Group I: Compulsory
-    'ENG': { 'A': 80, 'A-': 75, 'B+': 70, 'B': 65, 'B-': 60, 'C+': 55, 'C': 50, 'C-': 45, 'D+': 40, 'D': 35, 'D-': 30, 'E': 0 },
-    'KIS': { 'A': 78, 'A-': 73, 'B+': 68, 'B': 63, 'B-': 58, 'C+': 53, 'C': 48, 'C-': 43, 'D+': 38, 'D': 33, 'D-': 28, 'E': 0 },
-    'MAT': { 'A': 70, 'A-': 65, 'B+': 60, 'B': 55, 'B-': 49, 'C+': 43, 'C': 37, 'C-': 31, 'D+': 25, 'D': 19, 'D-': 12, 'E': 0 },
+    'ENGLISH': { 'A': 80, 'A-': 75, 'B+': 70, 'B': 65, 'B-': 60, 'C+': 55, 'C': 50, 'C-': 45, 'D+': 40, 'D': 35, 'D-': 30, 'E': 0 },
+    'KISWAHILI': { 'A': 78, 'A-': 73, 'B+': 68, 'B': 63, 'B-': 58, 'C+': 53, 'C': 48, 'C-': 43, 'D+': 38, 'D': 33, 'D-': 28, 'E': 0 },
+    'MATHEMATICS': { 'A': 70, 'A-': 65, 'B+': 60, 'B': 55, 'B-': 49, 'C+': 43, 'C': 37, 'C-': 31, 'D+': 25, 'D': 19, 'D-': 12, 'E': 0 },
 
     // Group II: Sciences
-    'BIO': { 'A': 80, 'A-': 75, 'B+': 70, 'B': 65, 'B-': 60, 'C+': 55, 'C': 50, 'C-': 45, 'D+': 40, 'D': 35, 'D-': 30, 'E': 0 },
-    'PHY': { 'A': 60, 'A-': 55, 'B+': 50, 'B': 45, 'B-': 40, 'C+': 35, 'C': 30, 'C-': 25, 'D+': 20, 'D': 15, 'D-': 10, 'E': 0 },
-    'CHEM': { 'A': 65, 'A-': 60, 'B+': 55, 'B': 50, 'B-': 45, 'C+': 40, 'C': 35, 'C-': 30, 'D+': 25, 'D': 20, 'D-': 15, 'E': 0 },
+    'BIOLOGY': { 'A': 80, 'A-': 75, 'B+': 70, 'B': 65, 'B-': 60, 'C+': 55, 'C': 50, 'C-': 45, 'D+': 40, 'D': 35, 'D-': 30, 'E': 0 },
+    'PHYSICS': { 'A': 60, 'A-': 55, 'B+': 50, 'B': 45, 'B-': 40, 'C+': 35, 'C': 30, 'C-': 25, 'D+': 20, 'D': 15, 'D-': 10, 'E': 0 },
+    'CHEMISTRY': { 'A': 65, 'A-': 60, 'B+': 55, 'B': 50, 'B-': 45, 'C+': 40, 'C': 35, 'C-': 30, 'D+': 25, 'D': 20, 'D-': 15, 'E': 0 },
 
     // Group III: Humanities & Technical
-    'HIST': { 'A': 80, 'A-': 75, 'B+': 70, 'B': 65, 'B-': 60, 'C+': 55, 'C': 50, 'C-': 45, 'D+': 40, 'D': 35, 'D-': 30, 'E': 0 },
-    'GEO': { 'A': 66, 'A-': 61, 'B+': 56, 'B': 51, 'B-': 46, 'C+': 41, 'C': 36, 'C-': 31, 'D+': 26, 'D': 21, 'D-': 16, 'E': 0 },
+    'HISTORY': { 'A': 80, 'A-': 75, 'B+': 70, 'B': 65, 'B-': 60, 'C+': 55, 'C': 50, 'C-': 45, 'D+': 40, 'D': 35, 'D-': 30, 'E': 0 },
+    'GEOGRAPHY': { 'A': 66, 'A-': 61, 'B+': 56, 'B': 51, 'B-': 46, 'C+': 41, 'C': 36, 'C-': 31, 'D+': 26, 'D': 21, 'D-': 16, 'E': 0 },
     'CRE': { 'A': 90, 'A-': 85, 'B+': 80, 'B': 75, 'B-': 70, 'C+': 65, 'C': 60, 'C-': 55, 'D+': 50, 'D': 45, 'D-': 40, 'E': 0 },
-    'AGRI': { 'A': 88, 'A-': 83, 'B+': 78, 'B': 73, 'B-': 68, 'C+': 63, 'C': 58, 'C-': 53, 'D+': 48, 'D': 43, 'D-': 38, 'E': 0 },
+    'AGRICULTURE': { 'A': 88, 'A-': 83, 'B+': 78, 'B': 73, 'B-': 68, 'C+': 63, 'C': 58, 'C-': 53, 'D+': 48, 'D': 43, 'D-': 38, 'E': 0 },
+    'BUSINESS STUDIES': { 'A': 88, 'A-': 83, 'B+': 78, 'B': 73, 'B-': 68, 'C+': 63, 'C': 58, 'C-': 53, 'D+': 48, 'D': 43, 'D-': 38, 'E': 0 },
+    'COMPUTER STUDIES': { 'A': 88, 'A-': 83, 'B+': 78, 'B': 73, 'B-': 68, 'C+': 63, 'C': 58, 'C-': 53, 'D+': 48, 'D': 43, 'D-': 38, 'E': 0 },
+    'HOME SCIENCE': { 'A': 88, 'A-': 83, 'B+': 78, 'B': 73, 'B-': 68, 'C+': 63, 'C': 58, 'C-': 53, 'D+': 48, 'D': 43, 'D-': 38, 'E': 0 },
+    'ART & DESIGN': { 'A': 88, 'A-': 83, 'B+': 78, 'B': 73, 'B-': 68, 'C+': 63, 'C': 58, 'C-': 53, 'D+': 48, 'D': 43, 'D-': 38, 'E': 0 },
+    'MUSIC': { 'A': 88, 'A-': 83, 'B+': 78, 'B': 73, 'B-': 68, 'C+': 63, 'C': 58, 'C-': 53, 'D+': 48, 'D': 43, 'D-': 38, 'E': 0 },
+    'FRENCH': { 'A': 88, 'A-': 83, 'B+': 78, 'B': 73, 'B-': 68, 'C+': 63, 'C': 58, 'C-': 53, 'D+': 48, 'D': 43, 'D-': 38, 'E': 0 },
+    'GERMAN': { 'A': 88, 'A-': 83, 'B+': 78, 'B': 73, 'B-': 68, 'C+': 63, 'C': 58, 'C-': 53, 'D+': 48, 'D': 43, 'D-': 38, 'E': 0 },
+    'ARABIC': { 'A': 88, 'A-': 83, 'B+': 78, 'B': 73, 'B-': 68, 'C+': 63, 'C': 58, 'C-': 53, 'D+': 48, 'D': 43, 'D-': 38, 'E': 0 },
 
     // Default (using English/History/Biology scale as standard)
     'DEFAULT': { 'A': 80, 'A-': 75, 'B+': 70, 'B': 65, 'B-': 60, 'C+': 55, 'C': 50, 'C-': 45, 'D+': 40, 'D': 35, 'D-': 30, 'E': 0 }
@@ -32,26 +40,26 @@ const GRADING_SCALES = {
 
 function getSubjectName(code) {
     const subjects = {
-        'ENG': 'English',
-        'KIS': 'Kiswahili',
-        'MAT': 'Mathematics',
-        'BIO': 'Biology',
-        'CHEM': 'Chemistry',
-        'PHY': 'Physics',
-        'HIST': 'History',
-        'GEO': 'Geography',
+        'ENGLISH': 'English',
+        'KISWAHILI': 'Kiswahili',
+        'MATHEMATICS': 'Mathematics',
+        'BIOLOGY': 'Biology',
+        'CHEMISTRY': 'Chemistry',
+        'PHYSICS': 'Physics',
+        'HISTORY': 'History',
+        'GEOGRAPHY': 'Geography',
         'CRE': 'Christian Religious Education',
         'IRE': 'Islamic Religious Education',
         'HRE': 'Hindu Religious Education',
-        'COMP': 'Computer Studies',
-        'AGRI': 'Agriculture',
-        'HSCI': 'Home Science',
-        'ART': 'Art & Design',
+        'COMPUTER STUDIES': 'Computer Studies',
+        'AGRICULTURE': 'Agriculture',
+        'HOME SCIENCE': 'Home Science',
+        'ART & DESIGN': 'Art & Design',
         'MUSIC': 'Music',
-        'FREN': 'French',
-        'GERM': 'German',
-        'ARAB': 'Arabic',
-        'BST': 'Business Studies'
+        'FRENCH': 'French',
+        'GERMAN': 'German',
+        'ARABIC': 'Arabic',
+        'BUSINESS STUDIES': 'Business Studies'
     };
     return subjects[code] || code;
 }
@@ -94,9 +102,9 @@ function calculateKCSEStats(subjects) {
     const agp = subjects.reduce((sum, s) => sum + s.points, 0);
 
     // 2. Identify Grading Subjects (Math + Best Lang + Best 5 Others)
-    const math = subjects.find(s => s.code === 'MAT');
+    const math = subjects.find(s => s.code === 'MATHEMATICS');
     // Languages: English, Kiswahili
-    const languages = subjects.filter(s => ['ENG', 'KIS'].includes(s.code));
+    const languages = subjects.filter(s => ['ENGLISH', 'KISWAHILI'].includes(s.code));
 
     // Sort languages by points desc
     languages.sort((a, b) => b.points - a.points);
@@ -141,7 +149,7 @@ function parseSMS(smsText) {
     try {
         const text = smsText.toUpperCase().trim();
         // Use a whitelist of common codes to avoid false positives from words like "GRADE" or "KCSE"
-        const commonCodes = ['ENG', 'KIS', 'MAT', 'BIO', 'CHEM', 'PHY', 'HIST', 'GEO', 'CRE', 'IRE', 'HRE', 'COMP', 'AGRI', 'HSCI', 'ART', 'MUSIC', 'FREN', 'GERM', 'ARAB', 'BST'];
+        const commonCodes = ['ENGLISH', 'KISWAHILI', 'MATHEMATICS', 'BIOLOGY', 'CHEMISTRY', 'PHYSICS', 'HISTORY', 'GEOGRAPHY', 'CRE', 'IRE', 'HRE', 'COMPUTER STUDIES', 'AGRICULTURE', 'HOME SCIENCE', 'ART & DESIGN', 'MUSIC', 'FRENCH', 'GERMAN', 'ARABIC', 'BUSINESS STUDIES'];
         const subjectPattern = new RegExp(`\\b(${commonCodes.join('|')})\\s*[-:]?\\s*([A-E][+-]?|\\d{1,3})`, 'g');
         const subjects = [];
         let match;
@@ -166,7 +174,7 @@ function parseSMS(smsText) {
                 name: getSubjectName(subjectCode),
                 grade: grade,
                 points: points,
-                group: ['ENG', 'KIS', 'MAT'].includes(subjectCode) ? 'Core Foundation' : 'Elective/Other'
+                group: ['ENGLISH', 'KISWAHILI', 'MATHEMATICS'].includes(subjectCode) ? 'Core Foundation' : 'Elective/Other'
             });
         }
 

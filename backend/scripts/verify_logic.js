@@ -3,14 +3,14 @@ const { calculateClusters } = require('../services/clusterCalculator');
 
 const testCase1 = `
 KCSE Results 2024
-ENG C-, KIS C-, MAT C-, BIO D+, PHY B-, CHEM D+, HIST B, AGRI B+ 
+ENGLISH C-, KISWAHILI C-, MATHEMATICS C-, BIOLOGY D+, PHYSICS B-, CHEMISTRY D+, HISTORY B, AGRICULTURE B+ 
 Mean Grade: C+
 `;
 
 const testCase2 = `
 KCSE 2024
-ENG C+, KIS B-, MAT C-, BIO C-
-PHY B, CHEM D+, GEO A, BST B+
+ENGLISH C+, KISWAHILI B-, MATHEMATICS C-, BIOLOGY C-
+PHYSICS B, CHEMISTRY D+, GEOGRAPHY A, BUSINESS STUDIES B+
 Mean Grade: B-
 `;
 

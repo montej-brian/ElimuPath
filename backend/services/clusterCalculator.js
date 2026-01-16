@@ -35,11 +35,11 @@ function calculateClusters(subjects, gradingPoints) {
         return null;
     };
 
-    const eng = findSubject(['ENG']);
-    const mat = findSubject(['MAT']);
-    const bio = findSubject(['BIO', 'PHY']);
-    const chem = findSubject(['CHEM', 'PHY']);
-    const phy = findSubject(['PHY', 'CHEM', 'BIO']);
+    const eng = findSubject(['ENGLISH']);
+    const mat = findSubject(['MATHEMATICS']);
+    const bio = findSubject(['BIOLOGY', 'PHYSICS']);
+    const chem = findSubject(['CHEMISTRY', 'PHYSICS']);
+    const phy = findSubject(['PHYSICS', 'CHEMISTRY', 'BIOLOGY']);
 
     // 1. Science Cluster (Eng + Mat + Bio + Chem)
     if (eng && mat && bio && chem) {
@@ -54,8 +54,8 @@ function calculateClusters(subjects, gradingPoints) {
         });
     }
 
-    const kis = findSubject(['KIS']);
-    const humanities = findSubject(['HIST', 'GEO', 'CRE', 'IRE', 'HRE']);
+    const kis = findSubject(['KISWAHILI']);
+    const humanities = findSubject(['HISTORY', 'GEOGRAPHY', 'CRE', 'IRE', 'HRE']);
 
     // 2. Arts Cluster (Eng + Kis + Mat + Hum)
     if (eng && kis && mat && humanities) {
@@ -70,7 +70,7 @@ function calculateClusters(subjects, gradingPoints) {
         });
     }
 
-    const bst = findSubject(['BST', 'GEO', 'HIST', 'CRE']);
+    const bst = findSubject(['BUSINESS STUDIES', 'GEOGRAPHY', 'HISTORY', 'CRE']);
 
     // 3. Business Cluster (Eng + Mat + Kis + Bst/Hum)
     if (eng && mat && kis && bst) {
@@ -85,7 +85,7 @@ function calculateClusters(subjects, gradingPoints) {
         });
     }
 
-    const tech = findSubject(['COMP', 'AGRI', 'PHY', 'CHEM']);
+    const tech = findSubject(['COMPUTER STUDIES', 'AGRICULTURE', 'PHYSICS', 'CHEMISTRY']);
 
     // 4. Tech Cluster (Eng + Mat + Phy + Tech)
     if (eng && mat && phy && tech) {

@@ -3,7 +3,7 @@ import { getFullAnalysis as apiGetFullAnalysis } from '../services/api';
 import Logo from './brand/Logo';
 import Loader from './brand/Loader';
 
-const FullAnalysis = ({ analysisId }) => {
+const FullAnalysis = ({ analysisId, onBack }) => {
     const [results, setResults] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -72,6 +72,9 @@ const FullAnalysis = ({ analysisId }) => {
         <div className="min-h-screen bg-gray-50">
             <header className="bg-white shadow-sm">
                 <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6">
+                    <button onClick={onBack} className="text-blue-600 hover:text-blue-700 mb-2">
+                        ← Back
+                    </button>
                     <Logo className="h-8 mb-2" />
                     <h1 className="text-2xl font-bold">Your Complete Career Analysis</h1>
                 </div>
