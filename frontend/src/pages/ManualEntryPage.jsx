@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, GraduationCap, ChevronRight, AlertCircle, Loader2, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Trash2, GraduationCap, ChevronRight, AlertCircle, Loader2, Sparkles, ShieldCheck } from 'lucide-react';
 
 const grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'];
 const subjects = [
@@ -20,13 +19,21 @@ const subjects = [
 ];
 
 const ManualEntryPage = () => {
-  const [selectedSubjects, setSelectedSubjects] = useState([{ subject_code: 'MAT', grade: 'C+', id: Date.now() }]);
+  const [selectedSubjects, setSelectedSubjects] = useState([{ 
+    subject_code: 'MAT', 
+    grade: 'C+', 
+    id: Math.random().toString(36).substr(2, 9) 
+  }]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const addSubject = () => {
-    setSelectedSubjects([...selectedSubjects, { subject_code: 'ENG', grade: 'C+', id: Date.now() }]);
+    setSelectedSubjects([...selectedSubjects, { 
+      subject_code: 'ENG', 
+      grade: 'C+', 
+      id: Math.random().toString(36).substr(2, 9) 
+    }]);
   };
 
   const removeSubject = (id) => {
@@ -89,7 +96,7 @@ const ManualEntryPage = () => {
            <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
               <div className="space-y-4">
                  <AnimatePresence initial={false}>
-                    {selectedSubjects.map((s, index) => (
+                    {selectedSubjects.map((s) => (
                        <motion.div 
                           key={s.id}
                           initial={{ opacity: 0, x: -20 }}

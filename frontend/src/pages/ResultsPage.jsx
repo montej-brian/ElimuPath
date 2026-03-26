@@ -7,33 +7,38 @@ import { motion, AnimatePresence } from 'framer-motion';
 const ResultsPage = () => {
   const [searchParams] = useSearchParams();
   const [matches, setMatches] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const resultId = searchParams.get('id');
+
+  const fetchMatches = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/api/matches/${resultId}/matches?page=${page}&limit=10`);
+      // res.data is now { total, page, limit, data }
+      setMatches(res.data.data);
+      setTotal(res.data.total);
+    } catch (_err) {
+      console.error('Failed to fetch matches', _err);
+    } finally {
+      setLoading(false);
+    }
+  }, [resultId, page]);
 
   useEffect(() => {
     if (resultId) {
       fetchMatches();
     }
-  }, [resultId]);
-
-  const fetchMatches = async () => {
-    try {
-      const res = await api.get(`/api/matches/${resultId}/matches`);
-      setMatches(res.data);
-    } catch (err) {
-      console.error('Failed to fetch matches', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [resultId, page, fetchMatches]);
 
   const filteredMatches = matches.filter(m => {
     if (filter === 'all') return true;
     return m.eligibility_status === filter;
   });
 
-  if (loading) return (
+  if (loading && page === 1) return (
     <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center p-6 bg-[#F8FAFC]">
       <Loader2 className="w-16 h-16 animate-spin text-primary mb-6" />
       <p className="text-xl font-black text-slate-900 animate-pulse uppercase tracking-widest">Finding your perfect match...</p>
@@ -46,7 +51,7 @@ const ResultsPage = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="space-y-2">
             <h1 className="text-5xl font-black text-slate-900">Your Eligibility Paths</h1>
-            <p className="text-slate-500 font-medium">We've found {matches.length} potential courses for you.</p>
+            <p className="text-slate-500 font-medium">We've found {total} potential courses for you.</p>
           </div>
           <div className="flex gap-2 p-1 bg-white rounded-2xl border border-slate-100 shadow-sm">
             {['all', 'eligible', 'ineligible'].map(f => (
@@ -85,7 +90,7 @@ const ResultsPage = () => {
                     </div>
                     
                     <div className="flex flex-wrap gap-6 text-sm font-bold text-slate-500">
-                      <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-secondary text-secondary" /> {match.location || 'Distributed'}</div>
+                      <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-secondary" /> {match.university_location || match.location || 'Distributed'}</div>
                       <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-primary" /> {match.duration || '4 Years'}</div>
                       <div className="flex items-center gap-2"><BookOpen className="w-4 h-4 text-accent" /> Degree Program</div>
                     </div>
@@ -120,6 +125,29 @@ const ResultsPage = () => {
             ))}
           </AnimatePresence>
         </div>
+
+        {/* Pagination Controls */}
+        {total > 10 && (
+          <div className="mt-16 flex items-center justify-center gap-4">
+            <button
+              disabled={page === 1 || loading}
+              onClick={() => setPage(p => p - 1)}
+              className="px-8 py-4 bg-white rounded-2xl font-black text-xs uppercase tracking-widest border border-slate-100 shadow-sm hover:border-primary disabled:opacity-30 disabled:hover:border-slate-100 transition-all"
+            >
+              Previous
+            </button>
+            <span className="text-sm font-black text-slate-400 uppercase tracking-widest">
+              Page {page} of {Math.ceil(total / 10)}
+            </span>
+            <button
+              disabled={page >= Math.ceil(total / 10) || loading}
+              onClick={() => setPage(p => p + 1)}
+              className="px-8 py-4 bg-white rounded-2xl font-black text-xs uppercase tracking-widest border border-slate-100 shadow-sm hover:border-primary disabled:opacity-30 disabled:hover:border-slate-100 transition-all"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

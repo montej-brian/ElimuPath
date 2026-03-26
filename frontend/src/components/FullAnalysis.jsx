@@ -43,7 +43,7 @@ const FullAnalysis = ({ analysisId, onBack }) => {
                 // Initial slice
                 if (data.courses) setDisplayCourses(shuffleArray(data.courses).slice(0, 10));
                 if (data.careers) setDisplayCareers(shuffleArray(data.careers).slice(0, 5));
-            } catch (err) {
+            } catch (_err) {
                 setError('Failed to load analysis results.');
             } finally {
                 setLoading(false);

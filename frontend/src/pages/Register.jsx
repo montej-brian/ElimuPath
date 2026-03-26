@@ -16,8 +16,8 @@ const Register = () => {
     try {
       await register(formData.name, formData.email, formData.password);
       navigate('/dashboard');
-    } catch (err) {
-      alert('Registration failed: ' + (err.response?.data?.error || 'Unknown error'));
+    } catch (_err) {
+      alert('Registration failed: ' + (_err.response?.data?.error || 'Unknown error'));
     } finally {
       setLoading(false);
     }

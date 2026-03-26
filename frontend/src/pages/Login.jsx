@@ -17,8 +17,8 @@ const Login = () => {
     try {
       await login(email, password);
       navigate('/dashboard');
-    } catch (err) {
-      alert('Login failed: ' + (err.response?.data?.error || 'Unknown error'));
+    } catch (_err) {
+      alert('Login failed: ' + (_err.response?.data?.error || 'Unknown error'));
     } finally {
       setLoading(false);
     }

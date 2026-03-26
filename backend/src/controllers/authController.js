@@ -31,7 +31,15 @@ exports.register = async (req, res) => {
     const user = newUser.rows[0];
     const token = generateToken(user.id);
 
-    res.status(201).json({ user, token });
+    // Set cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    res.status(201).json({ user });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
@@ -56,11 +64,27 @@ exports.login = async (req, res) => {
     const token = generateToken(user.id);
     const { password_hash, ...userWithoutPassword } = user;
 
-    res.json({ user: userWithoutPassword, token });
+    // Set cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    res.json({ user: userWithoutPassword });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
   }
+};
+
+exports.logout = async (req, res) => {
+  res.cookie('token', '', {
+    httpOnly: true,
+    expires: new Date(0)
+  });
+  res.json({ message: 'Logged out successfully' });
 };
 
 exports.getMe = async (req, res) => {

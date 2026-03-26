@@ -14,7 +14,7 @@ const AdminDashboard = ({ onBack }) => {
             const response = await getAdminStats();
             setStats(response.data);
             setError('');
-        } catch (err) {
+        } catch (_err) {
             setError('Failed to load dashboard statistics.');
         } finally {
             setLoading(false);

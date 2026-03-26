@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Plus, Edit2, Trash2, Building, GraduationCap, ArrowLeft, Loader2, X, Save, AlertCircle, BookmarkPlus } from 'lucide-react';
+import { Plus, Edit2, Trash2, Building, GraduationCap, X, Save, AlertCircle, BookmarkPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'];
@@ -174,8 +174,9 @@ const UniversityModal = ({ show, onClose, onSave, editing }) => {
   const [formData, setFormData] = useState({ name: '', type: 'Public', location: '', website_url: '' });
   
   useEffect(() => {
-    if (editing) setFormData(editing);
-    else setFormData({ name: '', type: 'Public', location: '', website_url: '' });
+    if (show) {
+      setFormData(editing || { name: '', type: 'Public', location: '', website_url: '' });
+    }
   }, [editing, show]);
 
   const handleSubmit = async (e) => {
@@ -220,8 +221,9 @@ const CourseModal = ({ show, onClose, onSave, universities, editing }) => {
   const [formData, setFormData] = useState({ university_id: '', name: '', type: 'Degree', description: '', duration: '' });
   
   useEffect(() => {
-    if (editing) setFormData(editing);
-    else setFormData({ university_id: universities[0]?.id || '', name: '', type: 'Degree', description: '', duration: '' });
+    if (show) {
+      setFormData(editing || { university_id: universities[0]?.id || '', name: '', type: 'Degree', description: '', duration: '' });
+    }
   }, [editing, show, universities]);
 
   const handleSubmit = async (e) => {
@@ -270,14 +272,15 @@ const RequirementsModal = ({ show, onClose, course }) => {
   const [reqs, setReqs] = useState([]);
   const [formData, setFormData] = useState({ subject_code: 'MAT', min_grade: 'C+', cluster_weight: 1.0 });
 
-  useEffect(() => {
-    if (course && show) fetchReqs();
-  }, [course, show]);
-
-  const fetchReqs = async () => {
+  const fetchReqs = React.useCallback(async () => {
+    if (!course) return;
     const res = await api.get(`/api/admin/courses/${course.id}/requirements`);
     setReqs(res.data);
-  };
+  }, [course]);
+
+  useEffect(() => {
+    if (course && show) fetchReqs();
+  }, [course, show, fetchReqs]);
 
   const handleAdd = async (e) => {
     e.preventDefault();

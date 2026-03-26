@@ -42,8 +42,8 @@ const UploadPage = () => {
       setProgress(90);
       sessionStorage.setItem('lastResult', JSON.stringify(res.data.data));
       setTimeout(() => navigate(`/results?id=${res.data.data.id}`), 500);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Upload failed. Please try again.');
+    } catch (_err) {
+      setError(_err.response?.data?.error || 'Upload failed. Please try again.');
       setUploading(false);
     }
   };

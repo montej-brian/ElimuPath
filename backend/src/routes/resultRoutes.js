@@ -5,12 +5,14 @@ const OCRService = require('../services/ocrService');
 const StudentResult = require('../models/StudentResult');
 const { calculateTotalPoints } = require('../utils/gradeUtils');
 const auth = require('../middleware/auth');
+const { uploadLimiter } = require('../middleware/rateLimiters');
+const { validate, resultSchemas } = require('../middleware/validation');
 const crypto = require('crypto');
 
 // @route   POST /api/results/upload
 // @desc    Upload KCSE certificate and parse results
 // @access  Public (Guest or Auth)
-router.post('/upload', auth, upload.single('certificate'), async (req, res) => {
+router.post('/upload', uploadLimiter, auth, upload.single('certificate'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Please upload a file' });
   }
@@ -54,7 +56,7 @@ router.post('/upload', auth, upload.single('certificate'), async (req, res) => {
 // @route   POST /api/results/manual
 // @desc    Manual entry of KCSE results
 // @access  Public
-router.post('/manual', auth, async (req, res) => {
+router.post('/manual', auth, validate(resultSchemas.manual), async (req, res) => {
   const { subjects, meanGrade, meanPoints } = req.body;
 
   if (!subjects || Object.keys(subjects).length < 7) {

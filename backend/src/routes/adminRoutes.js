@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const auth = require('../middleware/auth');
+const cache = require('../utils/cache');
+const { validate, adminSchemas } = require('../middleware/validation');
 
 // Middleware to check for Admin role
 const adminOnly = (req, res, next) => {
@@ -23,7 +25,7 @@ router.get('/universities', auth, adminOnly, async (req, res) => {
 });
 
 // @route   POST /api/admin/universities
-router.post('/universities', auth, adminOnly, async (req, res) => {
+router.post('/universities', auth, adminOnly, validate(adminSchemas.university), async (req, res) => {
   const { name, type, location, website_url } = req.body;
   try {
     const result = await db.query(
@@ -37,7 +39,7 @@ router.post('/universities', auth, adminOnly, async (req, res) => {
 });
 
 // @route   PUT /api/admin/universities/:id
-router.put('/universities/:id', auth, adminOnly, async (req, res) => {
+router.put('/universities/:id', auth, adminOnly, validate(adminSchemas.university), async (req, res) => {
   const { name, type, location, website_url } = req.body;
   try {
     const result = await db.query(
@@ -76,7 +78,7 @@ router.get('/courses', auth, adminOnly, async (req, res) => {
 });
 
 // @route   POST /api/admin/courses
-router.post('/courses', auth, adminOnly, async (req, res) => {
+router.post('/courses', auth, adminOnly, validate(adminSchemas.course), async (req, res) => {
   const { university_id, name, type, description, duration } = req.body;
   try {
     const result = await db.query(
@@ -90,13 +92,16 @@ router.post('/courses', auth, adminOnly, async (req, res) => {
 });
 
 // @route   PUT /api/admin/courses/:id
-router.put('/courses/:id', auth, adminOnly, async (req, res) => {
+router.put('/courses/:id', auth, adminOnly, validate(adminSchemas.course), async (req, res) => {
   const { name, type, description, duration } = req.body;
   try {
     const result = await db.query(
       'UPDATE courses SET name = $1, type = $2, description = $3, duration = $4 WHERE id = $5 RETURNING *',
       [name, type, description, duration, req.params.id]
     );
+    // Invalidate cache
+    await cache.invalidateRequirements(req.params.id);
+    await cache.clearAll();
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update course' });
@@ -131,6 +136,9 @@ router.post('/courses/:id/requirements', auth, adminOnly, async (req, res) => {
       'INSERT INTO course_requirements (course_id, subject_code, min_grade, cluster_weight) VALUES ($1, $2, $3, $4) RETURNING *',
       [req.params.id, subject_code, min_grade, cluster_weight]
     );
+    // Invalidate cache
+    await cache.invalidateRequirements(req.params.id);
+    await cache.clearAll();
     res.status(201).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: 'Failed to create requirement' });
@@ -140,6 +148,12 @@ router.post('/courses/:id/requirements', auth, adminOnly, async (req, res) => {
 // @route   DELETE /api/admin/requirements/:id
 router.delete('/requirements/:id', auth, adminOnly, async (req, res) => {
   try {
+    // Get course_id before deleting
+    const reqInfo = await db.query('SELECT course_id FROM course_requirements WHERE id = $1', [req.params.id]);
+    if (reqInfo.rows[0]) {
+      await cache.invalidateRequirements(reqInfo.rows[0].course_id);
+      await cache.clearAll();
+    }
     await db.query('DELETE FROM course_requirements WHERE id = $1', [req.params.id]);
     res.json({ message: 'Requirement deleted' });
   } catch (err) {

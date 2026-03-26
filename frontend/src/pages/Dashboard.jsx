@@ -15,8 +15,8 @@ const Dashboard = () => {
       try {
         const res = await api.get('/api/results/history'); // Note: Need this endpoint in backend
         setResults(res.data);
-      } catch (err) {
-        console.error('Failed to fetch history', err);
+      } catch (_err) {
+        console.error('Failed to fetch history', _err);
       } finally {
         setLoading(false);
       }

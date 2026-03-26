@@ -1,35 +1,48 @@
 const db = require('../config/db');
 const { calculatePoints } = require('../utils/gradeUtils');
+const cache = require('../utils/cache');
 
 class MatchingService {
   static async findMatches(resultId) {
-    // 1. Fetch student results
+    // 1. Check if final matches are already cached
+    const cachedMatches = await cache.getMatches(resultId);
+    if (cachedMatches) {
+      console.log('⚡ Using cached matches for:', resultId);
+      return cachedMatches;
+    }
+
+    // 2. Fetch student results
     const resultRes = await db.query('SELECT * FROM student_results WHERE id = $1', [resultId]);
     if (resultRes.rows.length === 0) throw new Error('Result not found');
     const studentResult = resultRes.rows[0];
     const studentSubjects = studentResult.subjects;
 
-    // 2. Fetch all courses and their requirements
+    // 3. Fetch all active courses
     const coursesRes = await db.query(`
-      SELECT c.*, u.name as university_name, u.location as university_location,
-             json_agg(cr.*) as requirements
+      SELECT c.*, u.name as university_name, u.location as university_location
       FROM courses c
       JOIN universities u ON c.university_id = u.id
-      LEFT JOIN course_requirements cr ON c.id = cr.course_id
       WHERE c.is_active = true
-      GROUP BY c.id, u.id
     `);
     const courses = coursesRes.rows;
 
     const matches = [];
 
-    // 3. For each course, check eligibility
+    // 4. For each course, check eligibility
     for (const course of courses) {
-      const { requirements } = course;
+      // Check individual requirement cache
+      let requirements = await cache.getRequirements(course.id);
+      
+      if (!requirements) {
+        const reqRes = await db.query('SELECT * FROM course_requirements WHERE course_id = $1', [course.id]);
+        requirements = reqRes.rows;
+        await cache.setRequirements(course.id, requirements);
+      }
+
       let isEligible = true;
       let reasons = [];
 
-      if (requirements && requirements[0] !== null) {
+      if (requirements && requirements.length > 0) {
         for (const req of requirements) {
           const studentGrade = studentSubjects[req.subject_code];
           
@@ -59,7 +72,7 @@ class MatchingService {
 
       matches.push(match);
 
-      // 4. Save match to DB
+      // 5. Save/Update match result in database
       await db.query(`
         INSERT INTO eligibility_matches (student_result_id, course_id, eligibility_status, reason)
         VALUES ($1, $2, $3, $4)
@@ -67,6 +80,9 @@ class MatchingService {
         SET eligibility_status = EXCLUDED.eligibility_status, reason = EXCLUDED.reason
       `, [resultId, course.id, match.eligibility_status, match.reason]);
     }
+
+    // 6. Cache the final matches array
+    await cache.setMatches(resultId, matches);
 
     return matches;
   }

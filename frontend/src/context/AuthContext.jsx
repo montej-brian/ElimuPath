@@ -9,23 +9,21 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const loadUser = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const res = await api.get('/auth/me');
-          setUser(res.data);
-        } catch (err) {
-          localStorage.removeItem('token');
-        }
+      try {
+        const res = await api.get('/auth/me');
+        setUser(res.data);
+      } catch (_err) {
+        // Not logged in or token expired
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     loadUser();
   }, []);
 
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
-    localStorage.setItem('token', res.data.token);
     setUser(res.data.user);
     await associatePendingResult();
     return res.data;
@@ -33,7 +31,6 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, password) => {
     const res = await api.post('/auth/register', { name, email, password });
-    localStorage.setItem('token', res.data.token);
     setUser(res.data.user);
     await associatePendingResult();
     return res.data;
@@ -44,15 +41,18 @@ export const AuthProvider = ({ children }) => {
     if (lastResult && lastResult.id) {
       try {
         await api.post('/api/results/associate', { resultId: lastResult.id });
-        // After associating, we can clear the session storage flag if we want.
-      } catch (err) {
-        console.error('Failed to associate guest result:', err);
+      } catch (_err) {
+        console.error('Failed to associate guest result:', _err);
       }
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (_err) {
+      console.error('Logout failed', _err);
+    }
     setUser(null);
   };
 
