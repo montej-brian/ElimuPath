@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, User, UserPlus, AlertCircle } from 'lucide-react';
+import { GraduationCap, Mail, Lock, User, ArrowRight, Loader2, ShieldCheck } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Register = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -15,96 +13,103 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
     try {
-      await register(name, email, password);
+      await register(formData.name, formData.email, formData.password);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to register');
+      alert('Registration failed: ' + (err.response?.data?.error || 'Unknown error'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 p-8 space-y-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-slate-900">Get Started</h2>
-          <p className="text-slate-500 mt-2">Create an account to save your results</p>
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 bg-[#F8FAFC]">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-lg w-full"
+      >
+        <div className="text-center mb-10 space-y-4">
+          <div className="w-20 h-20 bg-secondary rounded-[30px] flex items-center justify-center mx-auto shadow-2xl shadow-secondary/20">
+             <GraduationCap className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-4xl font-black text-slate-900 leading-tight">Start Your Journey</h1>
+          <p className="text-slate-500 font-medium leading-relaxed">Join thousands of students making smarter <br/> choices with eduPath AI.</p>
         </div>
 
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-xl flex items-center gap-2 text-sm font-medium border border-red-100">
-            <AlertCircle className="w-4 h-4" />
-            {error}
-          </div>
-        )}
+        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-slate-200/50 border border-slate-50 relative overflow-hidden">
+          {/* Accent decoration */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16"></div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700 ml-1">Full Name</label>
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input 
-                type="text" 
-                required
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-12 pr-4 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+          <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+            <div className="space-y-1">
+              <label className="text-xs font-black uppercase text-slate-400 tracking-widest pl-1">Full Name</label>
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                <input
+                  type="text"
+                  required
+                  placeholder="John Doe"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-primary focus:bg-white transition-all font-medium"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700 ml-1">Email Address</label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input 
-                type="email" 
-                required
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-12 pr-4 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all"
-                placeholder="john@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+            <div className="space-y-1">
+              <label className="text-xs font-black uppercase text-slate-400 tracking-widest pl-1">Email Address</label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                <input
+                  type="email"
+                  required
+                  placeholder="john@example.com"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-primary focus:bg-white transition-all font-medium"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700 ml-1">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input 
-                type="password" 
-                required
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-12 pr-4 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+            <div className="space-y-1">
+              <label className="text-xs font-black uppercase text-slate-400 tracking-widest pl-1">Create Password</label>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-primary focus:bg-white transition-all font-medium"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                />
+              </div>
             </div>
+
+            <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl">
+               <ShieldCheck className="w-5 h-5 text-green-500 mt-0.5" />
+               <p className="text-[11px] text-slate-500 font-medium">By registering, you agree to our Terms of Service and Privacy Policy. Your data is encrypted and secure.</p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-secondary text-white py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-2 hover:bg-secondary-dark transition-all shadow-xl shadow-secondary/30 disabled:opacity-70"
+            >
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <>Create Free Account <ArrowRight className="w-5 h-5" /></>}
+            </button>
+          </form>
+
+          <div className="mt-10 pt-8 border-t border-slate-50 text-center">
+            <p className="text-slate-500 font-medium">
+              Already a member? {' '}
+              <Link to="/login" className="text-primary font-black hover:underline ml-1">Sign In instead</Link>
+            </p>
           </div>
-
-          <button 
-            type="submit" 
-            disabled={loading}
-            className="w-full bg-primary text-white py-4 rounded-2xl font-bold text-lg hover:bg-primary-dark transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {loading ? 'Creating account...' : (
-              <>
-                <UserPlus className="w-5 h-5" />
-                Register
-              </>
-            )}
-          </button>
-        </form>
-
-        <div className="text-center">
-          <p className="text-slate-500">Already have an account? <Link to="/login" className="text-primary font-bold hover:underline">Sign In</Link></p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

@@ -10,6 +10,7 @@ import ManualEntryPage from './pages/ManualEntryPage';
 import ResultsPage from './pages/ResultsPage';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
@@ -26,30 +27,31 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="min-h-screen bg-slate-50">
-          <Navbar />
-          <main>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/upload" element={<UploadPage />} />
-              <Route path="/manual-entry" element={<ManualEntryPage />} />
-              <Route path="/results" element={<ResultsPage />} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
-              {/* Add more routes as we build them */}
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </main>
-          <footer className="py-12 bg-white border-t border-slate-100">
-            <div className="max-w-7xl mx-auto px-4 text-center text-slate-500 font-medium">
-              &copy; {new Date().getFullYear()} ElimuPath - Find Your Way Forward.
-            </div>
-          </footer>
-        </div>
-      </Router>
+      <ErrorBoundary>
+        <Router>
+          <div className="min-h-screen bg-[#F8FAFC]">
+            <Navbar />
+            <main>
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/upload" element={<UploadPage />} />
+                <Route path="/manual-entry" element={<ManualEntryPage />} />
+                <Route path="/results" element={<ResultsPage />} />
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </main>
+            <footer className="py-12 bg-white border-t border-slate-100">
+              <div className="max-w-7xl mx-auto px-4 text-center text-slate-500 font-medium">
+                &copy; {new Date().getFullYear()} ElimuPath - Find Your Way Forward.
+              </div>
+            </footer>
+          </div>
+        </Router>
+      </ErrorBoundary>
     </AuthProvider>
   );
 }

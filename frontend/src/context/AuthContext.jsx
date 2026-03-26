@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }) => {
     const res = await api.post('/auth/login', { email, password });
     localStorage.setItem('token', res.data.token);
     setUser(res.data.user);
+    await associatePendingResult();
     return res.data;
   };
 
@@ -34,7 +35,20 @@ export const AuthProvider = ({ children }) => {
     const res = await api.post('/auth/register', { name, email, password });
     localStorage.setItem('token', res.data.token);
     setUser(res.data.user);
+    await associatePendingResult();
     return res.data;
+  };
+
+  const associatePendingResult = async () => {
+    const lastResult = JSON.parse(sessionStorage.getItem('lastResult'));
+    if (lastResult && lastResult.id) {
+      try {
+        await api.post('/api/results/associate', { resultId: lastResult.id });
+        // After associating, we can clear the session storage flag if we want.
+      } catch (err) {
+        console.error('Failed to associate guest result:', err);
+      }
+    }
   };
 
   const logout = () => {

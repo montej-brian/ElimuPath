@@ -13,37 +13,38 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 glass-morphism border-b bg-white/70">
+    <nav className="sticky top-0 z-50 bg-white border-b border-slate-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
-          <Link to="/" className="flex items-center gap-2 group">
-            <GraduationCap className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
-            <span className="text-xl font-extrabold tracking-tight text-slate-900">Elimu<span className="text-primary">Path</span></span>
+        <div className="flex justify-between h-20 items-center">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+              <GraduationCap className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-2xl font-black tracking-tight text-slate-900 italic">edu<span className="text-secondary">Path</span></span>
           </Link>
 
+          {/* Centered Links */}
+          <div className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-600 uppercase tracking-widest">
+            <Link to="/" className="hover:text-primary transition-colors">Home</Link>
+            <Link to="/about" className="hover:text-primary transition-colors">Pages</Link>
+            <Link to="/matches" className="hover:text-primary transition-colors">Course</Link>
+            <Link to="/blog" className="hover:text-primary transition-colors">Blog</Link>
+          </div>
+
+          {/* Right Action */}
           <div className="flex items-center gap-4">
             {user ? (
-              <>
-                <Link to="/dashboard" className="flex items-center gap-1 text-slate-600 hover:text-primary font-medium transition-colors">
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span className="hidden sm:inline">Dashboard</span>
-                </Link>
-                <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
-                  <User className="w-4 h-4 text-slate-500" />
-                  <span className="text-sm font-semibold text-slate-700">{user.name}</span>
-                </div>
-                <button 
-                  onClick={handleLogout}
-                  className="flex items-center gap-1 text-secondary hover:bg-red-50 px-3 py-1.5 rounded-lg transition-all"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </>
+              <div className="flex items-center gap-4">
+                <Link to="/dashboard" className="text-slate-600 hover:text-primary font-bold"><LayoutDashboard className="w-6 h-6" /></Link>
+                <div className="h-8 w-[1px] bg-slate-200"></div>
+                <button onClick={handleLogout} className="text-secondary hover:scale-110 transition-all"><LogOut className="w-6 h-6" /></button>
+              </div>
             ) : (
-              <div className="flex items-center gap-3">
-                <Link to="/login" className="text-slate-600 font-semibold hover:text-primary">Sign In</Link>
-                <Link to="/register" className="bg-primary text-white px-5 py-2 rounded-xl font-bold hover:bg-primary-dark transition-all transform hover:-translate-y-0.5 shadow-lg shadow-blue-500/20">
-                  Get Started
+              <div className="flex items-center gap-6">
+                <Link to="/login" className="text-slate-900 font-extrabold text-sm uppercase tracking-tighter hover:text-primary">Sign In</Link>
+                <Link to="/register" className="bg-primary text-white px-7 py-3 rounded-full font-black text-sm uppercase tracking-widest hover:bg-primary-dark transition-all shadow-xl shadow-primary/30">
+                  Try For Free
                 </Link>
               </div>
             )}

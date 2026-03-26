@@ -1,154 +1,125 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
 import api from '../services/api';
-import { Search, Filter, CheckCircle2, XCircle, MapPin, Building2, ArrowRight, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { GraduationCap, MapPin, Clock, BookOpen, CheckCircle, XCircle, AlertCircle, Filter, Search, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ResultsPage = () => {
+  const [searchParams] = useSearchParams();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
-  const [search, setSearch] = useState('');
-  const [lastResult, setLastResult] = useState(null);
+  const resultId = searchParams.get('id');
 
   useEffect(() => {
-    const fetchMatches = async () => {
-      const storedResult = JSON.parse(sessionStorage.getItem('lastResult'));
-      if (!storedResult) {
-        setLoading(false);
-        return;
-      }
-      setLastResult(storedResult);
+    if (resultId) {
+      fetchMatches();
+    }
+  }, [resultId]);
 
-      try {
-        const res = await api.get(`/api/matches/${storedResult.id}/matches`);
-        setMatches(res.data);
-      } catch (err) {
-        console.error('Failed to fetch matches', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMatches();
-  }, []);
+  const fetchMatches = async () => {
+    try {
+      const res = await api.get(`/api/matches/${resultId}/matches`);
+      setMatches(res.data);
+    } catch (err) {
+      console.error('Failed to fetch matches', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredMatches = matches.filter(m => {
-    const matchesFilter = filter === 'all' || m.eligibility_status === filter;
-    const matchesSearch = m.course_name.toLowerCase().includes(search.toLowerCase()) || 
-                          m.university_name.toLowerCase().includes(search.toLowerCase());
-    return matchesFilter && matchesSearch;
+    if (filter === 'all') return true;
+    return m.eligibility_status === filter;
   });
 
-  if (loading) {
-    return (
-      <div className="min-h-[calc(100vh-64px)] flex flex-col items-center justify-center">
-        <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-        <h2 className="text-xl font-bold text-slate-900">Calculating your future...</h2>
-        <p className="text-slate-500">Matching your grades with university requirements</p>
-      </div>
-    );
-  }
-
-  if (!lastResult && !loading) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-        <h2 className="text-3xl font-bold text-slate-900 mb-4">No Results Found</h2>
-        <p className="text-slate-600 mb-8 text-xl">Please upload your certificate or enter grades manually first.</p>
-        <Link to="/upload" className="bg-primary text-white px-8 py-4 rounded-2xl font-bold">Get Started</Link>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center p-6 bg-[#F8FAFC]">
+      <Loader2 className="w-16 h-16 animate-spin text-primary mb-6" />
+      <p className="text-xl font-black text-slate-900 animate-pulse uppercase tracking-widest">Finding your perfect match...</p>
+    </div>
+  );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12 animate-fade-in">
-      {/* Header Summary */}
-      <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-8 mb-12 text-white shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-10">
-          <CheckCircle2 className="w-40 h-40" />
-        </div>
-        <div className="relative z-10">
-          <p className="text-blue-300 font-bold mb-2 tracking-widest uppercase text-sm">Analysis Complete</p>
-          <h1 className="text-4xl font-extrabold mb-6">Your Eligibility Report</h1>
-          <div className="flex flex-wrap gap-6">
-            <div className="bg-white/10 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/10">
-              <p className="text-slate-300 text-sm font-medium">Mean Grade</p>
-              <p className="text-3xl font-black">{lastResult.mean_grade}</p>
-            </div>
-            <div className="bg-blue-500/20 backdrop-blur-md px-6 py-4 rounded-2xl border border-blue-400/20">
-              <p className="text-blue-200 text-sm font-medium">Total Points</p>
-              <p className="text-3xl font-black">{lastResult.total_points}</p>
-            </div>
+    <div className="min-h-[calc(100vh-80px)] py-12 px-4 bg-[#F8FAFC]">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div className="space-y-2">
+            <h1 className="text-5xl font-black text-slate-900">Your Eligibility Paths</h1>
+            <p className="text-slate-500 font-medium">We've found {matches.length} potential courses for you.</p>
+          </div>
+          <div className="flex gap-2 p-1 bg-white rounded-2xl border border-slate-100 shadow-sm">
+            {['all', 'eligible', 'ineligible'].map(f => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${filter === f ? 'bg-primary text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'}`}
+              >
+                {f}
+              </button>
+            ))}
           </div>
         </div>
-      </div>
 
-      {/* Filters & Search */}
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <input 
-            type="text" 
-            placeholder="Search for courses or universities..."
-            className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-12 pr-4 focus:ring-4 focus:ring-primary/10 outline-none"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-2 p-1 bg-white border border-slate-200 rounded-2xl shrink-0">
-          {['all', 'eligible', 'ineligible'].map(opt => (
-            <button
-              key={opt}
-              onClick={() => setFilter(opt)}
-              className={`px-6 py-3 rounded-xl font-bold capitalize transition-all ${filter === opt ? 'bg-primary text-white shadow-lg shadow-blue-500/20' : 'text-slate-500 hover:bg-slate-50'}`}
-            >
-              {opt === 'all' ? 'All' : opt === 'eligible' ? 'Eligible' : 'Not Eligible'}
-            </button>
-          ))}
-        </div>
-      </div>
+        <div className="grid grid-cols-1 gap-6">
+          <AnimatePresence mode="popLayout">
+            {filteredMatches.map((match) => (
+              <motion.div
+                key={match.course_id}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white p-8 rounded-[40px] shadow-2xl shadow-slate-200/50 border border-slate-50 group hover:border-primary/20 transition-all"
+              >
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                  <div className="space-y-4 flex-1">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-primary">
+                        <GraduationCap className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest leading-none mb-1">{match.university_name}</p>
+                        <h3 className="text-2xl font-black text-slate-900 group-hover:text-primary transition-colors">{match.course_name}</h3>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-6 text-sm font-bold text-slate-500">
+                      <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-secondary text-secondary" /> {match.location || 'Distributed'}</div>
+                      <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-primary" /> {match.duration || '4 Years'}</div>
+                      <div className="flex items-center gap-2"><BookOpen className="w-4 h-4 text-accent" /> Degree Program</div>
+                    </div>
+                  </div>
 
-      {/* Results List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredMatches.map((match, idx) => (
-          <motion.div 
-            key={idx}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.05 }}
-            className="group bg-white rounded-3xl border border-slate-100 p-6 hover:shadow-2xl hover:shadow-slate-200/50 transition-all"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-primary font-bold text-sm">
-                  <Building2 className="w-4 h-4" />
-                  {match.university_name}
+                  <div className="flex items-center gap-6 lg:border-l lg:border-slate-50 lg:pl-8">
+                    <div className="text-right hidden sm:block">
+                       <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Status</p>
+                       <span className={`text-sm font-black uppercase tracking-widest ${match.eligibility_status === 'eligible' ? 'text-green-500' : 'text-secondary'}`}>
+                          {match.eligibility_status}
+                       </span>
+                    </div>
+
+                    <div className={`w-16 h-16 rounded-3xl flex items-center justify-center ${match.eligibility_status === 'eligible' ? 'bg-green-50 text-green-500 shadow-xl shadow-green-500/10' : 'bg-red-50 text-secondary shadow-xl shadow-secondary/10'}`}>
+                      {match.eligibility_status === 'eligible' ? <CheckCircle className="w-8 h-8" /> : <XCircle className="w-8 h-8" />}
+                    </div>
+
+                    <div className="flex flex-col gap-2 min-w-[200px]">
+                      {match.eligibility_status === 'ineligible' && (
+                        <div className="flex items-start gap-2 p-3 bg-red-50 rounded-xl border border-red-100">
+                          <AlertCircle className="w-4 h-4 text-secondary mt-0.5" />
+                          <p className="text-[10px] font-bold text-secondary leading-tight">{match.reason}</p>
+                        </div>
+                      )}
+                      <button className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${match.eligibility_status === 'eligible' ? 'bg-primary text-white shadow-xl shadow-primary/30 hover:bg-primary-dark' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>
+                        Apply Now
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-xl font-extrabold text-slate-900 group-hover:text-primary transition-colors">{match.course_name}</h3>
-              </div>
-              <div className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider ${match.eligibility_status === 'eligible' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                {match.eligibility_status}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 text-slate-500 text-sm mb-6 pb-6 border-b border-slate-50">
-              <MapPin className="w-4 h-4" />
-              {match.university_location}
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col gap-1">
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Requirement Status</p>
-                <p className={`text-sm font-medium ${match.eligibility_status === 'eligible' ? 'text-slate-600' : 'text-red-500'}`}>
-                  {match.reason}
-                </p>
-              </div>
-              <Link to={`/course/${match.course_id}`} className="p-3 bg-slate-50 rounded-xl text-slate-400 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </div>
-          </motion.div>
-        ))}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
