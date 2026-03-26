@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const { Pool } = require('pg');
+const db = require('./config/db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,11 +14,6 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 
-// Database connection placeholder
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
@@ -27,6 +22,19 @@ app.get('/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development'
   });
 });
+
+// Routes
+const authRoutes = require('./routes/authRoutes');
+const resultRoutes = require('./routes/resultRoutes');
+const matchRoutes = require('./routes/matchRoutes');
+const historyRoutes = require('./routes/historyRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+
+app.use('/auth', authRoutes);
+app.use('/api/results', resultRoutes);
+app.use('/api/results', historyRoutes);
+app.use('/api/matches', matchRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
