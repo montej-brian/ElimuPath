@@ -1,111 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import LandingPage from './components/LandingPage';
-import ResultsInput from './components/ResultsInput';
-import PreviewLocked from './components/PreviewLocked';
-import Payment from './components/Payment';
-import FullAnalysis from './components/FullAnalysis';
-import SplashScreen from './components/SplashScreen';
-import AdminDashboard from './components/AdminDashboard';
+import React from 'react';
 
-export default function App() {
-  const [stage, setStage] = useState('landing'); // landing, input, preview, payment, analysis
-  const [analysisId, setAnalysisId] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [showSplash, setShowSplash] = useState(true);
-
-  // Synchronize state with browser history
-  useEffect(() => {
-    const handlePopState = (event) => {
-      if (event.state) {
-        setStage(event.state.stage);
-        setAnalysisId(event.state.analysisId || null);
-        setPreview(event.state.preview || null);
-        setShowSplash(false);
-      } else {
-        // Initial state
-        setStage('landing');
-        setAnalysisId(null);
-        setPreview(null);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  const navigateTo = (newStage, data = {}) => {
-    setStage(newStage);
-    if (data.analysisId !== undefined) setAnalysisId(data.analysisId);
-    if (data.preview !== undefined) setPreview(data.preview);
-
-    window.history.pushState(
-      { stage: newStage, analysisId: data.analysisId, preview: data.preview },
-      '',
-      ''
-    );
-  };
-
-  const handleAnalyze = (id, previewData) => {
-    navigateTo('analysis', { analysisId: id, preview: previewData });
-  };
-
-  const handleSplashFinish = () => {
-    setShowSplash(false);
-    // Initialize history state on splash finish
-    window.history.replaceState({ stage: 'landing' }, '', '');
-  };
-
+function App() {
   return (
-    <div>
-      {showSplash ? (
-        <SplashScreen onFinish={handleSplashFinish} />
-      ) : (
-        <>
-          {stage === 'landing' && (
-            <LandingPage onGetStarted={() => navigateTo('input')} />
-          )}
-          {stage === 'input' && (
-            <ResultsInput
-              onAnalyze={handleAnalyze}
-              onBack={() => navigateTo('landing')}
-            />
-          )}
-          {stage === 'preview' && (
-            <PreviewLocked
-              preview={preview}
-              onPay={() => navigateTo('payment')}
-              onBack={() => navigateTo('input')}
-            />
-          )}
-          {stage === 'payment' && (
-            <Payment
-              analysisId={analysisId}
-              onSuccess={() => navigateTo('analysis')}
-              onBack={() => navigateTo('preview')}
-            />
-          )}
-          {stage === 'analysis' && (
-            <FullAnalysis
-              analysisId={analysisId}
-              onBack={() => navigateTo('input')}
-            />
-          )}
-          {stage === 'admin' && (
-            <AdminDashboard onBack={() => navigateTo('landing')} />
-          )}
-          {/* Subtle Admin Portal */}
-          {stage === 'landing' && (
-            <div className="fixed bottom-4 right-4 opacity-5 hover:opacity-100 transition-opacity">
-              <button
-                onClick={() => navigateTo('admin')}
-                className="text-[10px] text-gray-400 uppercase tracking-widest"
-              >
-                Management
-              </button>
-            </div>
-          )}
-        </>
-      )}
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+      <header className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-blue-600 mb-2">ElimuPath</h1>
+        <p className="text-lg text-gray-700">Find your eligible Kenyan university courses based on your KCSE results.</p>
+      </header>
+      
+      <main className="w-full max-w-2xl bg-white rounded-lg shadow-md p-6">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Project Initialized</h2>
+          <p className="text-gray-600 mb-6">The core project structure is ready. Next steps include implementing OCR and course matching logic.</p>
+          <div className="flex justify-center gap-4">
+            <span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">React (Vite)</span>
+            <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium">Tailwind CSS</span>
+            <span className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">Express API</span>
+          </div>
+        </div>
+      </main>
+
+      <footer className="mt-8 text-gray-500 text-sm">
+        &copy; {new Date().getFullYear()} ElimuPath - Helping Students Shape Their Futures
+      </footer>
     </div>
   );
 }
+
+export default App;
