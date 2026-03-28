@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS course_requirements (
     subject_code VARCHAR(10) NOT NULL, -- ENG, MAT, BIO, etc.
     min_grade VARCHAR(2) NOT NULL,
     is_mandatory BOOLEAN DEFAULT true,
-    cluster_weight DECIMAL(3,2), -- Weight for cluster calculation
+    cluster_weight DECIMAL(5,2), -- Weight for cluster calculation
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

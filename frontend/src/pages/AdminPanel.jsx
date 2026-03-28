@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Plus, Edit2, Trash2, Building, GraduationCap, X, Save, AlertCircle, BookmarkPlus, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Building, GraduationCap, X, Save, AlertCircle, BookmarkPlus, Loader2, Upload, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'];
@@ -66,7 +66,7 @@ const AdminPanel = () => {
           <p className="text-slate-500 font-medium">Manage the core building blocks of ElimuPath</p>
         </div>
         <div className="flex gap-2 p-1 bg-white border border-slate-200 rounded-2xl">
-          {['universities', 'courses'].map(tab => (
+          {['universities', 'courses', 'bulk import'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -108,7 +108,7 @@ const AdminPanel = () => {
               ))}
             </div>
           </motion.div>
-        ) : (
+        ) : activeTab === 'courses' ? (
           <motion.div key="courses" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-extrabold flex items-center gap-2"><GraduationCap className="w-6 h-6 text-primary" /> Courses</h2>
@@ -126,6 +126,15 @@ const AdminPanel = () => {
                     <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{c.university_name}</p>
                     <h3 className="text-xl font-black">{c.name}</h3>
                     <p className="text-sm text-slate-500 font-medium">{c.type} • {c.duration}</p>
+                    {c.requirements && c.requirements.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {c.requirements.map((req, i) => (
+                          <span key={i} className="text-[10px] font-black tracking-widest bg-blue-50 text-primary px-2 py-1 rounded-md">
+                            {req.subject_code}: {req.min_grade}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <button 
@@ -143,7 +152,18 @@ const AdminPanel = () => {
               ))}
             </div>
           </motion.div>
-        )}
+        ) : activeTab === 'bulk import' ? (
+          <motion.div key="import" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-extrabold flex items-center gap-2"><Upload className="w-6 h-6 text-primary" /> Bulk Import CSV</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <BulkImportCard title="Institutions" description="Headers: name, type, location" endpoint="/api/admin/bulk/universities" onSave={fetchData} />
+              <BulkImportCard title="Courses" description="Headers: university_name, course_name, type, duration" endpoint="/api/admin/bulk/courses" onSave={fetchData} />
+              <BulkImportCard title="Requirements" description="Headers: course_name, weight, subject_1, min_grade_1, subject_2 (opt), min_grade_2 (opt), subject_3 (opt), min_grade_3 (opt)" endpoint="/api/admin/bulk/requirements" onSave={fetchData} />
+            </div>
+          </motion.div>
+        ) : null}
       </AnimatePresence>
 
       {/* Modals Implementation (Abbreviated logic for brevity but fully functional in final write) */}
@@ -274,8 +294,17 @@ const RequirementsModal = ({ show, onClose, course }) => {
 
   const fetchReqs = React.useCallback(async () => {
     if (!course) return;
-    const res = await api.get(`/api/admin/courses/${course.id}/requirements`);
-    setReqs(res.data);
+    try {
+      const res = await api.get(`/api/admin/courses/${course.id}/requirements`);
+      if (Array.isArray(res.data)) {
+        setReqs(res.data);
+      } else {
+        setReqs([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch requirements modal', err);
+      setReqs([]);
+    }
   }, [course]);
 
   useEffect(() => {
@@ -297,32 +326,107 @@ const RequirementsModal = ({ show, onClose, course }) => {
     <Modal show={show} title={`Requirements: ${course?.name}`} onClose={onClose}>
       <div className="space-y-6">
         <form onSubmit={handleAdd} className="p-4 bg-slate-50 rounded-2xl space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <select className="bg-white border rounded-lg p-2" value={formData.subject_code} onChange={e => setFormData({...formData, subject_code: e.target.value})}>
-              {subjects.map(s => <option key={s}>{s}</option>)}
-            </select>
-            <select className="bg-white border rounded-lg p-2" value={formData.min_grade} onChange={e => setFormData({...formData, min_grade: e.target.value})}>
-              {grades.map(g => <option key={g}>{g}</option>)}
-            </select>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-black uppercase text-slate-400 pl-1">Subject</label>
+              <select className="w-full bg-white border border-slate-200 rounded-lg p-3 outline-none focus:border-primary" value={formData.subject_code} onChange={e => setFormData({...formData, subject_code: e.target.value})}>
+                {subjects.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-black uppercase text-slate-400 pl-1">Min Grade</label>
+              <select className="w-full bg-white border border-slate-200 rounded-lg p-3 outline-none focus:border-primary" value={formData.min_grade} onChange={e => setFormData({...formData, min_grade: e.target.value})}>
+                {grades.map(g => <option key={g}>{g}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-black uppercase text-slate-400 pl-1">Weight</label>
+              <input type="number" step="0.01" className="w-full bg-white border border-slate-200 rounded-lg p-3 outline-none focus:border-primary" value={formData.cluster_weight} onChange={e => setFormData({...formData, cluster_weight: e.target.value})} />
+            </div>
           </div>
-          <button type="submit" className="w-full bg-slate-900 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2">
+          <button type="submit" className="w-full bg-slate-900 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all">
             <Plus className="w-4 h-4" /> Add Required Subject
           </button>
         </form>
 
         <div className="space-y-2">
-          {reqs.map(r => (
+          {Array.isArray(reqs) && reqs.map(r => (
             <div key={r.id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
               <div className="flex items-center gap-4">
                 <span className="w-12 h-12 bg-blue-50 text-primary rounded-xl flex items-center justify-center font-black">{r.subject_code}</span>
-                <span className="font-bold text-slate-700">Min Grade: {r.min_grade}</span>
+                <div className="flex flex-col">
+                  <span className="font-bold text-slate-700">Min Grade: {r.min_grade}</span>
+                  {r.cluster_weight && <span className="text-xs text-slate-500 font-medium tracking-wide">Weight: {r.cluster_weight}</span>}
+                </div>
               </div>
-              <button onClick={() => handleDelete(r.id)} className="p-2 text-slate-400 hover:text-secondary rounded-lg"><Trash2 className="w-4 h-4" /></button>
+              <button type="button" onClick={() => handleDelete(r.id)} className="p-2 text-slate-400 hover:bg-red-50 hover:text-secondary rounded-lg transition-all"><Trash2 className="w-4 h-4" /></button>
             </div>
           ))}
+          {Array.isArray(reqs) && reqs.length === 0 && (
+            <div className="p-4 text-center text-slate-400 font-medium text-sm border border-slate-100 border-dashed rounded-2xl">
+              No manual requirements configured.
+            </div>
+          )}
         </div>
       </div>
     </Modal>
+  );
+};
+
+const BulkImportCard = ({ title, description, endpoint, onSave }) => {
+  const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleUpload = async () => {
+    if (!file) return;
+    setLoading(true);
+    setMessage(null);
+    setError(null);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await api.post(endpoint, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setMessage(res.data.message);
+      setFile(null);
+      if (onSave) onSave();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Upload failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-4">
+      <div className="w-16 h-16 bg-blue-50 text-primary rounded-full flex items-center justify-center">
+        <FileText className="w-8 h-8" />
+      </div>
+      <div>
+        <h3 className="text-xl font-black">{title}</h3>
+        <p className="text-xs text-slate-500 font-medium mt-1">{description}</p>
+      </div>
+      <input 
+        type="file" 
+        accept=".csv"
+        onChange={(e) => setFile(e.target.files[0])}
+        className="text-sm font-medium file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 w-full"
+      />
+      
+      {error && <div className="text-red-500 text-xs font-bold bg-red-50 px-3 py-2 rounded-lg w-full flex text-left"><AlertCircle className="w-4 h-4 inline mr-2 shrink-0"/>{error}</div>}
+      {message && <div className="text-green-600 text-xs font-bold bg-green-50 px-3 py-2 rounded-lg w-full text-left">{message}</div>}
+      
+      <button 
+        onClick={handleUpload}
+        disabled={!file || loading}
+        className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold flex flex-row items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+      >
+        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Upload className="w-4 h-4" /> Import CSV</>}
+      </button>
+    </div>
   );
 };
 

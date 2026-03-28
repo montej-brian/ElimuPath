@@ -4,6 +4,8 @@ const db = require('../config/db');
 const auth = require('../middleware/auth');
 const cache = require('../utils/cache');
 const { validate, adminSchemas } = require('../middleware/validation');
+const ImportService = require('../services/importService');
+const upload = require('../middleware/upload');
 
 // Middleware to check for Admin role
 const adminOnly = async (req, res, next) => {
@@ -75,7 +77,11 @@ router.delete('/universities/:id', auth, adminOnly, async (req, res) => {
 router.get('/courses', auth, adminOnly, async (req, res) => {
   try {
     const result = await db.query(`
-      SELECT c.*, u.name as university_name 
+      SELECT c.*, u.name as university_name,
+        COALESCE(
+          (SELECT json_agg(json_build_object('subject_code', cr.subject_code, 'min_grade', cr.min_grade, 'cluster_weight', cr.cluster_weight))
+           FROM course_requirements cr WHERE cr.course_id = c.id), '[]'::json
+        ) as requirements
       FROM courses c 
       JOIN universities u ON c.university_id = u.id 
       ORDER BY u.name ASC, c.name ASC
@@ -167,6 +173,46 @@ router.delete('/requirements/:id', auth, adminOnly, async (req, res) => {
     res.json({ message: 'Requirement deleted' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete requirement' });
+  }
+});
+
+// ===== BULK IMPORT ROUTES =====
+router.post('/bulk/universities', auth, adminOnly, upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Please upload a CSV file' });
+  try {
+    const result = await ImportService.importUniversities(req.file.path);
+    res.json({ message: `Successfully imported ${result.count} institutions.` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to process bulk upload for universities' });
+  }
+});
+
+router.post('/bulk/courses', auth, adminOnly, upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Please upload a CSV file' });
+  try {
+    const result = await ImportService.importCourses(req.file.path);
+    res.json({ 
+      message: `Successfully imported ${result.count} courses.`, 
+      issues: result.errors 
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to process bulk upload for courses' });
+  }
+});
+
+router.post('/bulk/requirements', auth, adminOnly, upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Please upload a CSV file' });
+  try {
+    const result = await ImportService.importRequirements(req.file.path);
+    res.json({ 
+      message: `Successfully imported ${result.count} requirements.`, 
+      issues: result.errors 
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to process bulk upload for requirements' });
   }
 });
 

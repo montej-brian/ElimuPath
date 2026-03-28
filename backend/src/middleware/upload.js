@@ -17,14 +17,14 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|pdf/;
-  const mimetype = allowedTypes.test(file.mimetype);
+  const allowedTypes = /jpeg|jpg|png|pdf|csv/;
+  // csv mimetype can be text/csv, application/vnd.ms-excel, etc.
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
 
-  if (mimetype && extname) {
+  if (extname) {
     return cb(null, true);
   }
-  cb(new Error('Only images (JPEG, PNG) and PDFs are allowed'));
+  cb(new Error('Only images (JPEG, PNG), PDFs, and CSVs are allowed'));
 };
 
 const upload = multer({
