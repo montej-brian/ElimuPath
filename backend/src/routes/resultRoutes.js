@@ -78,7 +78,7 @@ router.post('/manual', auth, validate(resultSchemas.manual), async (req, res) =>
       subjects
     });
 
-    res.status(201).json(result);
+    res.status(201).json({ data: result });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to save manual results' });

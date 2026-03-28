@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { Upload as UploadIcon, FileText, CheckCircle, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
+import { Upload as UploadIcon, FileText, CheckCircle, AlertCircle, Loader2, ArrowRight, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const UploadPage = () => {
@@ -160,7 +160,7 @@ const UploadPage = () => {
 
         <div className="mt-12 text-center">
            <button 
-             onClick={() => navigate('/manual')}
+             onClick={() => navigate('/manual-entry')}
              className="text-slate-500 font-bold hover:text-secondary group flex items-center justify-center gap-2 mx-auto"
            >
               OCR not working? <span className="text-secondary font-black group-hover:underline">Enter results manually</span>

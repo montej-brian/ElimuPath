@@ -40,24 +40,38 @@ class MatchingService {
       }
 
       let isEligible = true;
-      let reasons = [];
+      let detailedReasons = [];
 
       if (requirements && requirements.length > 0) {
         for (const req of requirements) {
           const studentGrade = studentSubjects[req.subject_code];
           
+          const requirementDetail = {
+            subject: req.subject_code,
+            required: req.min_grade,
+            student: studentGrade || 'N/A',
+            status: 'pending',
+            message: ''
+          };
+
           if (!studentGrade) {
             isEligible = false;
-            reasons.push(`Missing required subject: ${req.subject_code}`);
+            requirementDetail.status = 'failed';
+            requirementDetail.message = `Missing required subject: ${req.subject_code}`;
           } else {
             const studentPoints = calculatePoints(studentGrade);
             const requiredPoints = calculatePoints(req.min_grade);
             
             if (studentPoints < requiredPoints) {
               isEligible = false;
-              reasons.push(`${req.subject_code} grade ${studentGrade} is below required ${req.min_grade}`);
+              requirementDetail.status = 'failed';
+              requirementDetail.message = `${req.subject_code} grade ${studentGrade} is below required ${req.min_grade}`;
+            } else {
+              requirementDetail.status = 'met';
+              requirementDetail.message = `${req.subject_code} requirement met`;
             }
           }
+          detailedReasons.push(requirementDetail);
         }
       }
 
@@ -67,7 +81,8 @@ class MatchingService {
         university_name: course.university_name,
         university_location: course.university_location,
         eligibility_status: isEligible ? 'eligible' : 'ineligible',
-        reason: reasons.join(', ') || 'Meets all requirements'
+        detailed_reasons: detailedReasons,
+        reason: JSON.stringify(detailedReasons)
       };
 
       matches.push(match);

@@ -1,59 +1,88 @@
-# ElimuPath
+# ElimuPath 🎓
 
-ElimuPath is a web application designed to help Kenyan students find eligible university courses based on their KCSE (Kenya Certificate of Secondary Education) results.
+ElimuPath is an AI-powered platform designed to empower Kenyan students by providing personalized university course matches based on their KCSE results.
 
-## Project Structure
+![ElimuPath Banner](https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1000&auto=format&fit=crop)
 
-- `frontend/`: React application (Vite, Tailwind CSS)
-- `backend/`: Express.js API (PostgreSQL, Redis)
-- `docker-compose.yml`: Infrastructure for local development.
+## 🚀 Overview
 
-## Prerequisites
+The transition from secondary school to university is a critical crossroad. ElimuPath simplifies this journey by:
+1.  **AI Result Parsing**: Scan or upload your KCSE certificate.
+2.  **Eligibility Matching**: Instant comparison against KUCCPS requirements.
+3.  **Data-Driven Decisions**: Find courses where you meet both cluster and subject-specific thresholds.
 
-- Node.js (v18+)
-- Docker & Docker Compose
-- PostgreSQL (if not using Docker)
+## 🏗️ Architecture
 
-## Getting Started
-
-### 1. Infrastructure Setup
-
-Start the database and caching services using Docker:
-
-```bash
-docker compose up -d
+```mermaid
+graph TD
+    User((Student)) -->|React + Vite| Frontend[Frontend Web App]
+    Frontend -->|HTTPS + Cookies| Backend[Express API Gateway]
+    Backend -->|SQL| DB[(PostgreSQL)]
+    Backend -->|IORedis| Cache[(Redis)]
+    Backend -->|Tesseract.js| OCR[OCR Engine]
+    Admin((Administrator)) -->|Control Panel| Backend
 ```
 
-### 2. Backend Setup
+## 🛠️ Tech Stack
 
+- **Frontend**: React 19, Tailwind CSS 4, Framer Motion, Lucide Icons.
+- **Backend**: Node.js, Express, JWT (httpOnly Cookies), Express Validator.
+- **Data**: PostgreSQL (Persistence), Redis (Caching).
+- **OCR**: Tesseract.js for certificate analysis.
+
+## 🚦 Getting Started
+
+### Local Development
+
+1.  **Infrastructure**:
+    ```bash
+    docker compose up -d
+    ```
+2.  **Backend**:
+    ```bash
+    cd backend
+    npm install
+    npm run dev
+    ```
+3.  **Frontend**:
+    ```bash
+    cd frontend
+    npm install
+    npm run dev
+    ```
+
+### Seed Initial Data
+To populate the database with sample Kenyan universities and courses:
 ```bash
 cd backend
-cp .env.example .env
-npm install
-npm run dev
+node src/scripts/seed.js
 ```
 
-The API will be available at `http://localhost:3000`.
+## 📦 Production Deployment
 
-### 3. Frontend Setup
+1.  **Build Frontend**:
+    ```bash
+    cd frontend
+    npm run build
+    ```
+    *Build files will be generated in `frontend/dist`.*
 
-```bash
-cd frontend
-cp .env.example .env
-npm install
-npm run dev
-```
+2.  **Configure Environment**:
+    Create a `.env` file in the `backend/` directory using the `.env.production.example` template.
 
-The application will be available at `http://localhost:5173`.
+3.  **Run with Node**:
+    ```bash
+    cd backend
+    NODE_ENV=production npm start
+    ```
 
-## Architecture
+## 🔒 Security Features
 
-- **Frontend**: React (JavaScript) with Vite.
-- **Backend API**: Express (Node.js) with JWT authentication.
-- **Database**: PostgreSQL for persistent storage.
-- **Caching**: Redis for background jobs and caching.
-- **Storage**: Local filesystem (development) / S3 (production).
+- **HTTP Security**: Helmet.js for secure headers.
+- **Rate Limiting**: Protection against brute-force attacks on auth and upload endpoints.
+- **Secure Auth**: JWT transmitted via `httpOnly` secure cookies.
+- **Input Sanitization**: Strict schema validation for all user inputs.
 
 ---
 
-&copy; 2026 ElimuPath - Helping Students Shape Their Futures
+&copy; 2026 ElimuPath - Shaping the Future of Kenyan Education.

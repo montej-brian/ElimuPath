@@ -13,7 +13,6 @@ export const AuthProvider = ({ children }) => {
         const res = await api.get('/auth/me');
         setUser(res.data);
       } catch (_err) {
-        // Not logged in or token expired
         setUser(null);
       } finally {
         setLoading(false);
@@ -31,6 +30,13 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, password) => {
     const res = await api.post('/auth/register', { name, email, password });
+    setUser(res.data.user);
+    await associatePendingResult();
+    return res.data;
+  };
+
+  const googleLogin = async (credential) => {
+    const res = await api.post('/auth/google', { credential });
     setUser(res.data.user);
     await associatePendingResult();
     return res.data;
@@ -57,7 +63,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, googleLogin, logout }}>
       {children}
     </AuthContext.Provider>
   );

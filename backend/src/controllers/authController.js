@@ -24,7 +24,7 @@ exports.register = async (req, res) => {
 
     // Create user
     const newUser = await db.query(
-      'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, created_at',
+      'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, role, created_at',
       [name, email, passwordHash]
     );
 
@@ -88,6 +88,9 @@ exports.logout = async (req, res) => {
 };
 
 exports.getMe = async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
   try {
     const result = await db.query('SELECT id, name, email, role, created_at FROM users WHERE id = $1', [req.user.id]);
     if (result.rows.length === 0) {

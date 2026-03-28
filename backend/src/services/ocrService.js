@@ -90,10 +90,26 @@ class OCRService {
       'GEO': 'GEO',
       'RELIGIOUS': 'CRE', // Handles CRE/IRE/HRE
       'CRE': 'CRE',
+      'IRE': 'IRE',
+      'HRE': 'HRE',
       'BUSINESS': 'BST',
       'BST': 'BST',
       'AGRICULTURE': 'AGRI',
-      'AGR': 'AGRI'
+      'AGR': 'AGRI',
+      'HOME SCIENCE': 'HSC',
+      'HSC': 'HSC',
+      'FRENCH': 'FRE',
+      'FRE': 'FRE',
+      'GERMAN': 'GER',
+      'GER': 'GER',
+      'ARABIC': 'ARA',
+      'ARA': 'ARA',
+      'MUSIC': 'MUS',
+      'MUS': 'MUS',
+      'ART': 'ART',
+      'DRAWING': 'ART',
+      'COMPUTER': 'COMP',
+      'COMP': 'COMP'
     };
 
     for (let key in mapping) {

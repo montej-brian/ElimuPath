@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Plus, Edit2, Trash2, Building, GraduationCap, X, Save, AlertCircle, BookmarkPlus } from 'lucide-react';
+import { Plus, Edit2, Trash2, Building, GraduationCap, X, Save, AlertCircle, BookmarkPlus, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'];

@@ -4,6 +4,87 @@ import api from '../services/api';
 import { GraduationCap, MapPin, Clock, BookOpen, CheckCircle, XCircle, AlertCircle, Filter, Search, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const RequirementModal = ({ isOpen, onClose, match }) => {
+  if (!isOpen) return null;
+
+  let requirements = [];
+  try {
+    requirements = JSON.parse(match.reason);
+  } catch (_e) {
+    // Fallback for old string-based reasons
+    requirements = [{ subject: 'General', message: match.reason, status: match.eligibility_status === 'eligible' ? 'met' : 'failed' }];
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xl"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 20 }}
+        className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="p-8 border-b border-slate-100 flex items-center justify-center relative">
+          <div className="text-center">
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest leading-none mb-2">{match.university_name}</p>
+            <h3 className="text-2xl font-black text-slate-900">{match.course_name}</h3>
+          </div>
+          <button onClick={onClose} className="absolute right-8 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 transition-colors">
+            <XCircle className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="p-8">
+          <div className="space-y-4">
+            {requirements.map((req, idx) => (
+              <div key={idx} className={`p-6 rounded-3xl border transition-all ${req.status === 'met' ? 'bg-green-50/50 border-green-100' : 'bg-red-50/50 border-red-100'}`}>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm ${req.status === 'met' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-secondary'}`}>
+                      {req.subject}
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest leading-none mb-1">Requirement</p>
+                      <p className="text-sm font-bold text-slate-700">Minimum Grade: <span className="text-primary font-black uppercase">{req.required}</span></p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest leading-none mb-1">Your Grade</p>
+                    <p className={`text-xl font-black uppercase ${req.status === 'met' ? 'text-green-500' : 'text-secondary'}`}>{req.student}</p>
+                  </div>
+                </div>
+                {req.message && req.status === 'failed' && (
+                  <div className="mt-4 pt-4 border-t border-red-100 flex items-center gap-2">
+                    <AlertCircle className="w-3 h-3 text-secondary" />
+                    <p className="text-[10px] font-bold text-secondary uppercase tracking-wider">{req.message}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-8 bg-slate-50/50 flex flex-col sm:flex-row gap-4">
+          <button onClick={onClose} className="flex-1 py-4 bg-white border border-slate-200 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all">
+            Close Analysis
+          </button>
+          {match.eligibility_status === 'eligible' && (
+            <button className="flex-1 py-4 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+              Proceed to Application
+            </button>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 const ResultsPage = () => {
   const [searchParams] = useSearchParams();
   const [matches, setMatches] = useState([]);
@@ -11,13 +92,13 @@ const ResultsPage = () => {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [selectedMatch, setSelectedMatch] = useState(null);
   const resultId = searchParams.get('id');
 
   const fetchMatches = React.useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get(`/api/matches/${resultId}/matches?page=${page}&limit=10`);
-      // res.data is now { total, page, limit, data }
       setMatches(res.data.data);
       setTotal(res.data.total);
     } catch (_err) {
@@ -109,14 +190,11 @@ const ResultsPage = () => {
                     </div>
 
                     <div className="flex flex-col gap-2 min-w-[200px]">
-                      {match.eligibility_status === 'ineligible' && (
-                        <div className="flex items-start gap-2 p-3 bg-red-50 rounded-xl border border-red-100">
-                          <AlertCircle className="w-4 h-4 text-secondary mt-0.5" />
-                          <p className="text-[10px] font-bold text-secondary leading-tight">{match.reason}</p>
-                        </div>
-                      )}
-                      <button className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${match.eligibility_status === 'eligible' ? 'bg-primary text-white shadow-xl shadow-primary/30 hover:bg-primary-dark' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>
-                        Apply Now
+                      <button 
+                        onClick={() => setSelectedMatch(match)}
+                        className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${match.eligibility_status === 'eligible' ? 'bg-primary text-white shadow-xl shadow-primary/30 hover:bg-primary-dark' : 'bg-red-500 text-white shadow-xl shadow-red-500/30'}`}
+                      >
+                        {match.eligibility_status === 'eligible' ? 'Apply Now' : 'Why Ineligible?'}
                       </button>
                     </div>
                   </div>
@@ -149,6 +227,16 @@ const ResultsPage = () => {
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {selectedMatch && (
+          <RequirementModal 
+            isOpen={!!selectedMatch} 
+            match={selectedMatch} 
+            onClose={() => setSelectedMatch(null)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

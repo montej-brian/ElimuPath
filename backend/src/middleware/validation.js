@@ -16,11 +16,11 @@ const validate = (validations) => {
 const authSchemas = {
   register: [
     body('name').trim().notEmpty().withMessage('Name is required').isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
-    body('email').isEmail().withMessage('Enter a valid email').normalizeEmail(),
+    body('email').isEmail().withMessage('Enter a valid email').customSanitizer(v => v.toLowerCase().trim()),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
   ],
   login: [
-    body('email').isEmail().withMessage('Enter a valid email').normalizeEmail(),
+    body('email').isEmail().withMessage('Enter a valid email').customSanitizer(v => v.toLowerCase().trim()),
     body('password').notEmpty().withMessage('Password is required')
   ]
 };
@@ -41,7 +41,7 @@ const adminSchemas = {
     body('website_url').optional().isURL().withMessage('Enter a valid URL')
   ],
   course: [
-    body('university_id').isInt().withMessage('Invalid university ID'),
+    body('university_id').notEmpty().isUUID().withMessage('Invalid university ID'),
     body('name').trim().notEmpty().withMessage('Course name is required'),
     body('type').isIn(['Degree', 'Diploma', 'Certificate']).withMessage('Invalid course type'),
     body('duration').trim().notEmpty().withMessage('Duration is required')

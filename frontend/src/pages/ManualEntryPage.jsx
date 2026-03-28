@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, GraduationCap, ChevronRight, AlertCircle, Loader2, Sparkles, ShieldCheck } from 'lucide-react';
+import { Plus, Trash2, ChevronRight, AlertCircle, Loader2, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'];
 const subjects = [
@@ -63,8 +64,8 @@ const ManualEntryPage = () => {
 
     try {
       const res = await api.post('/api/results/manual', { subjects: subjectsMap });
-      sessionStorage.setItem('lastResult', JSON.stringify(res.data.data));
-      navigate(`/results?id=${res.data.data.id}`);
+      sessionStorage.setItem('lastResult', JSON.stringify(res.data));
+      navigate(`/results?id=${res.data.id}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to submit results.');
       setLoading(false);

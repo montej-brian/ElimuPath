@@ -6,11 +6,20 @@ const cache = require('../utils/cache');
 const { validate, adminSchemas } = require('../middleware/validation');
 
 // Middleware to check for Admin role
-const adminOnly = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
-    next();
-  } else {
-    res.status(403).json({ error: 'Access denied. Admin role required.' });
+const adminOnly = async (req, res, next) => {
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({ error: 'Not authenticated.' });
+  }
+  try {
+    const userRes = await db.query('SELECT role FROM users WHERE id = $1', [req.user.id]);
+    if (userRes.rows.length > 0 && userRes.rows[0].role === 'admin') {
+      next();
+    } else {
+      res.status(403).json({ error: 'Access denied. Admin role required.' });
+    }
+  } catch (err) {
+    console.error('Error checking admin role:', err);
+    res.status(500).json({ error: 'Server error checkings role.' });
   }
 };
 

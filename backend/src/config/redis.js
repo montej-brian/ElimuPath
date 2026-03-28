@@ -14,17 +14,23 @@ const redis = new Redis({
 });
 
 let isRedisConnected = false;
+let redisWarnedOnce = false;
 
 redis.on('connect', () => {
   isRedisConnected = true;
+  redisWarnedOnce = false;
   console.log('✅ Redis Connected');
 });
 
 redis.on('error', (err) => {
   isRedisConnected = false;
-  // Reduce logging noise
   if (err.code === 'ECONNREFUSED') {
-    console.warn('⚠️ Redis not available at ' + err.address + ':' + err.port + '. Caching disabled.');
+    if (!redisWarnedOnce) {
+      redisWarnedOnce = true;
+      const host = process.env.REDIS_HOST || '127.0.0.1';
+      const port = process.env.REDIS_PORT || 6379;
+      console.warn(`⚠️  Redis not available at ${host}:${port}. Caching disabled.`);
+    }
   } else {
     console.error('❌ Redis error:', err.message);
   }

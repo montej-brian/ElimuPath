@@ -3,23 +3,36 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { GraduationCap, Mail, Lock, User, ArrowRight, Loader2, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Register = () => {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const [error, setError] = useState('');
+  const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     try {
       await register(formData.name, formData.email, formData.password);
       navigate('/dashboard');
     } catch (_err) {
-      alert('Registration failed: ' + (_err.response?.data?.error || 'Unknown error'));
+      setError(_err.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const data = await googleLogin(credentialResponse.credential);
+      if (data?.user?.role === 'admin') navigate('/admin');
+      else navigate('/dashboard');
+    } catch (_err) {
+      setError('Google sign-in failed. Please try again.');
     }
   };
 
@@ -41,6 +54,12 @@ const Register = () => {
         <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-slate-200/50 border border-slate-50 relative overflow-hidden">
           {/* Accent decoration */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16"></div>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 font-bold text-sm">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
             <div className="space-y-1">
@@ -102,9 +121,27 @@ const Register = () => {
             </button>
           </form>
 
+          <div className="my-8 flex items-center gap-4">
+            <div className="flex-1 h-px bg-slate-100" />
+            <span className="text-xs font-black uppercase text-slate-400 tracking-widest">or</span>
+            <div className="flex-1 h-px bg-slate-100" />
+          </div>
+
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Google sign-in failed.')}
+              theme="outline"
+              shape="pill"
+              size="large"
+              text="signup_with"
+              width="360"
+            />
+          </div>
+
           <div className="mt-10 pt-8 border-t border-slate-50 text-center">
             <p className="text-slate-500 font-medium">
-              Already a member? {' '}
+              Already a member?{' '}
               <Link to="/login" className="text-primary font-black hover:underline ml-1">Sign In instead</Link>
             </p>
           </div>
