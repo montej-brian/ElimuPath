@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { GraduationCap, Mail, Lock, User, ArrowRight, Loader2, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Loader2, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { GoogleLogin } from '@react-oauth/google';
 
@@ -44,9 +44,7 @@ const Register = () => {
         className="max-w-lg w-full"
       >
         <div className="text-center mb-10 space-y-4">
-          <div className="w-20 h-20 bg-secondary rounded-[30px] flex items-center justify-center mx-auto shadow-2xl shadow-secondary/20">
-             <GraduationCap className="w-10 h-10 text-white" />
-          </div>
+          <img src="/elimu_path.png" alt="ElimuPath Logo" className="w-24 h-24 mx-auto object-contain drop-shadow-xl" />
           <h1 className="text-4xl font-black text-slate-900 leading-tight">Start Your Journey</h1>
           <p className="text-slate-500 font-medium leading-relaxed">Join thousands of students making smarter <br/> choices with eduPath AI.</p>
         </div>

@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     role VARCHAR(50) DEFAULT 'student',
+    reset_otp VARCHAR(100),
+    reset_otp_expiry TIMESTAMP,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -70,7 +72,8 @@ CREATE TABLE IF NOT EXISTS eligibility_matches (
     course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
     eligibility_status VARCHAR(50) NOT NULL, -- eligible, partially_eligible, ineligible
     reason TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_student_course_match UNIQUE(student_result_id, course_id)
 );
 
 -- ===== ANALYSIS TABLE (LEGACY COMPATIBILITY) =====

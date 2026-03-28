@@ -10,7 +10,7 @@ const Loader = ({ text = "Processing..." }) => {
                 {/* Logo Container with Pulse */}
                 <div className="relative bg-white p-4 rounded-2xl shadow-xl animate-bounce duration-2000">
                     <img
-                        src="/ElimuPath.png"
+                        src="/elimu_path.png"
                         alt="Loading..."
                         className="w-16 h-16 object-contain"
                     />

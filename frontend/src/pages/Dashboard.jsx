@@ -41,7 +41,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <Link to="/upload" className="flex items-center justify-center gap-2 w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-500/25 hover:bg-primary-dark transition-all">
+          <Link to="/manual-entry" className="flex items-center justify-center gap-2 w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-500/25 hover:bg-primary-dark transition-all">
             <PlusCircle className="w-5 h-5" />
             New Analysis
           </Link>
@@ -104,7 +104,7 @@ const Dashboard = () => {
               </div>
               <h3 className="text-xl font-bold text-slate-900">No results found</h3>
               <p className="text-slate-500 max-w-xs mx-auto">You haven't uploaded or entered any KCSE results yet.</p>
-              <Link to="/upload" className="inline-block text-primary font-bold hover:underline">Start your first analysis</Link>
+              <Link to="/manual-entry" className="inline-block text-primary font-bold hover:underline">Start your first analysis</Link>
             </div>
           )}
         </main>

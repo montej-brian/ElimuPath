@@ -4,7 +4,7 @@ const Logo = ({ className = "h-10", showText = true }) => {
     return (
         <div className={`flex items-center space-x-2 ${className}`}>
             <img
-                src="/ElimuPath.png"
+                src="/elimu_path.png"
                 alt="ElimuPath Logo"
                 className="h-full w-auto object-contain rounded-lg"
             />

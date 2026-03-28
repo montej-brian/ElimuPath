@@ -31,4 +31,14 @@ router.post('/google', authLimiter, googleAuthController.googleAuth);
 // @access  Private
 router.post('/logout', authController.logout);
 
+// @route   POST /auth/forgot-password
+// @desc    Request password reset OTP
+// @access  Public
+router.post('/forgot-password', authLimiter, validate(authSchemas.forgotPassword), authController.forgotPassword);
+
+// @route   POST /auth/reset-password
+// @desc    Reset password with OTP
+// @access  Public
+router.post('/reset-password', authLimiter, validate(authSchemas.resetPassword), authController.resetPassword);
+
 module.exports = router;

@@ -64,8 +64,9 @@ const ManualEntryPage = () => {
 
     try {
       const res = await api.post('/api/results/manual', { subjects: subjectsMap });
-      sessionStorage.setItem('lastResult', JSON.stringify(res.data));
-      navigate(`/results?id=${res.data.id}`);
+      const resultData = res.data.data || res.data;
+      sessionStorage.setItem('lastResult', JSON.stringify(resultData));
+      navigate(`/results?id=${resultData.id}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to submit results.');
       setLoading(false);

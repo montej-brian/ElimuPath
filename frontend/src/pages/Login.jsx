@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { GraduationCap, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { GoogleLogin } from '@react-oauth/google';
 
@@ -52,9 +52,7 @@ const Login = () => {
         className="max-w-md w-full"
       >
         <div className="text-center mb-10 space-y-4">
-          <div className="w-20 h-20 bg-primary rounded-3xl flex items-center justify-center mx-auto shadow-2xl shadow-primary/20">
-            <GraduationCap className="w-10 h-10 text-white" />
-          </div>
+          <img src="/elimu_path.png" alt="ElimuPath Logo" className="w-24 h-24 mx-auto object-contain drop-shadow-xl" />
           <h1 className="text-4xl font-black text-slate-900 leading-tight">Welcome Back!</h1>
           <p className="text-slate-500 font-medium">Continue your learning journey with ElimuPath</p>
         </div>

@@ -26,30 +26,37 @@ class MatchingService {
     `);
     const courses = coursesRes.rows;
 
+    // 3b. Fetch ALL requirements at once (bulk)
+    const allReqsRes = await db.query('SELECT * FROM course_requirements');
+    const reqsByCourse = {};
+    for (const req of allReqsRes.rows) {
+      if (!reqsByCourse[req.course_id]) reqsByCourse[req.course_id] = [];
+      reqsByCourse[req.course_id].push(req);
+    }
+
     const matches = [];
 
-    // 4. For each course, check eligibility
+    // Arrays to collect data for a single bulk UPSERT
+    const bulkStudentResultIds = [];
+    const bulkCourseIds = [];
+    const bulkStatuses = [];
+    const bulkReasons = [];
+
+    // 4. For each course, check eligibility entirely IN-MEMORY
     for (const course of courses) {
-      // Check individual requirement cache
-      let requirements = await cache.getRequirements(course.id);
-      
-      if (!requirements) {
-        const reqRes = await db.query('SELECT * FROM course_requirements WHERE course_id = $1', [course.id]);
-        requirements = reqRes.rows;
-        await cache.setRequirements(course.id, requirements);
-      }
+      const requirements = reqsByCourse[course.id] || [];
 
       let isEligible = true;
       let detailedReasons = [];
 
-      if (requirements && requirements.length > 0) {
+      if (requirements.length > 0) {
         for (const req of requirements) {
           const studentGrade = studentSubjects[req.subject_code];
           
           const requirementDetail = {
             subject: req.subject_code,
             required: req.min_grade,
-            student: studentGrade || 'N/A',
+            student: studentGrade || '--',
             status: 'pending',
             message: ''
           };
@@ -87,13 +94,21 @@ class MatchingService {
 
       matches.push(match);
 
-      // 5. Save/Update match result in database
-      await db.query(`
+      bulkStudentResultIds.push(resultId);
+      bulkCourseIds.push(course.id);
+      bulkStatuses.push(match.eligibility_status);
+      bulkReasons.push(match.reason);
+    }
+
+    // 5. Save/Update ALL matches in ONE single bulk database trip
+    if (matches.length > 0) {
+      const upsertQuery = `
         INSERT INTO eligibility_matches (student_result_id, course_id, eligibility_status, reason)
-        VALUES ($1, $2, $3, $4)
+        SELECT * FROM UNNEST ($1::uuid[], $2::uuid[], $3::varchar[], $4::text[])
         ON CONFLICT (student_result_id, course_id) DO UPDATE 
         SET eligibility_status = EXCLUDED.eligibility_status, reason = EXCLUDED.reason
-      `, [resultId, course.id, match.eligibility_status, match.reason]);
+      `;
+      await db.query(upsertQuery, [bulkStudentResultIds, bulkCourseIds, bulkStatuses, bulkReasons]);
     }
 
     // 6. Cache the final matches array

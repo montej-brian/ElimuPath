@@ -22,6 +22,14 @@ const authSchemas = {
   login: [
     body('email').isEmail().withMessage('Enter a valid email').customSanitizer(v => v.toLowerCase().trim()),
     body('password').notEmpty().withMessage('Password is required')
+  ],
+  forgotPassword: [
+    body('email').isEmail().withMessage('Enter a valid email').customSanitizer(v => v.toLowerCase().trim())
+  ],
+  resetPassword: [
+    body('email').isEmail().withMessage('Enter a valid email').customSanitizer(v => v.toLowerCase().trim()),
+    body('otp').trim().isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits'),
+    body('newPassword').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
   ]
 };
 
