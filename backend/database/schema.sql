@@ -35,8 +35,19 @@ CREATE TABLE IF NOT EXISTS courses (
     description TEXT,
     duration VARCHAR(50),
     is_active BOOLEAN DEFAULT true,
+    cut_off_points DECIMAL(5,3), -- weighted cluster points of last student placed
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===== COURSE CLUSTER SUBJECTS TABLE (KUCCPS) =====
+CREATE TABLE IF NOT EXISTS course_cluster_subjects (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+    subject VARCHAR(255) NOT NULL,
+    position INTEGER CHECK (position >= 1 AND position <= 4),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_course_subject UNIQUE (course_id, subject)
 );
 
 -- ===== COURSE REQUIREMENTS TABLE =====
@@ -59,6 +70,7 @@ CREATE TABLE IF NOT EXISTS student_results (
     mean_grade VARCHAR(2) NOT NULL,
     mean_points DECIMAL(4,2) NOT NULL,
     total_points INTEGER NOT NULL,
+    aggregate_points INTEGER CHECK (aggregate_points >= 0 AND aggregate_points <= 84), -- KUCCPS 't' aggregate
     subjects JSONB NOT NULL, -- Array of {code, name, grade, points}
     certificate_file_url TEXT,
     parsed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

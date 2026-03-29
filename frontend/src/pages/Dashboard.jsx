@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { LayoutDashboard, History, PlusCircle, ArrowRight, BookOpen, User as UserIcon, Calendar, Clock } from 'lucide-react';
+import { LayoutDashboard, History, PlusCircle, ArrowRight, BookOpen, User as UserIcon, Calendar, Clock, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -9,6 +9,17 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this result? This action cannot be undone.')) return;
+    try {
+      await api.delete(`/api/results/history/${id}`);
+      setResults(prev => prev.filter(r => r.id !== id));
+    } catch (_err) {
+      console.error('Failed to delete result', _err);
+      alert('Failed to delete the result. Please try again.');
+    }
+  };
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -84,16 +95,25 @@ const Dashboard = () => {
                       </div>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => {
-                      sessionStorage.setItem('lastResult', JSON.stringify(result));
-                      window.location.href = '/results';
-                    }}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-slate-50 rounded-xl font-bold text-slate-700 hover:bg-primary hover:text-white transition-all overflow-hidden relative"
-                  >
-                    View Report
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
+                    <button 
+                      onClick={() => {
+                        sessionStorage.setItem('lastResult', JSON.stringify(result));
+                        window.location.href = '/results';
+                      }}
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-50 rounded-xl font-bold text-slate-700 hover:bg-primary hover:text-white transition-all overflow-hidden relative"
+                    >
+                      View Report
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(result.id)}
+                      className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm border border-red-100"
+                      title="Delete Result"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
                 </motion.div>
               ))}
             </div>
