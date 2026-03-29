@@ -25,9 +25,9 @@ const Navbar = () => {
           {/* Centered Links */}
           <div className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-600 uppercase tracking-widest">
             <Link to="/" className="hover:text-primary transition-colors">Home</Link>
-            <Link to="/about" className="hover:text-primary transition-colors">Pages</Link>
-            <Link to="/matches" className="hover:text-primary transition-colors">Course</Link>
-            <Link to="/blog" className="hover:text-primary transition-colors">Blog</Link>
+            <Link to="/universities" className="hover:text-primary transition-colors">Universities</Link>
+            <Link to="/courses" className="hover:text-primary transition-colors">Courses</Link>
+            <Link to="/contact" className="hover:text-primary transition-colors">Contact</Link>
           </div>
 
           {/* Right Action */}

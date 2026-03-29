@@ -37,6 +37,7 @@ const matchRoutes = require('./routes/matchRoutes');
 const historyRoutes = require('./routes/historyRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const associateRoutes = require('./routes/associateRoutes');
+const publicRoutes = require('./routes/publicRoutes');
 
 app.use('/auth', authRoutes);
 app.use('/api/results', resultRoutes);
@@ -44,6 +45,7 @@ app.use('/api/results', associateRoutes);
 app.use('/api/results', historyRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/public', publicRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {

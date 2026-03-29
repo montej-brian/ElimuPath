@@ -11,6 +11,9 @@ import ResultsPage from './pages/ResultsPage';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
 import ErrorBoundary from './components/ErrorBoundary';
+import UniversitiesPage from './pages/UniversitiesPage';
+import CoursesPage from './pages/CoursesPage';
+import ContactPage from './pages/ContactPage';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
@@ -52,6 +55,9 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/manual-entry" element={<ManualEntryPage />} />
                 <Route path="/results" element={<ResultsPage />} />
+                <Route path="/universities" element={<UniversitiesPage />} />
+                <Route path="/courses" element={<CoursesPage />} />
+                <Route path="/contact" element={<ContactPage />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
                 <Route path="*" element={<Navigate to="/" />} />
