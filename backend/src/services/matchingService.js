@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const { calculatePoints } = require('../utils/gradeUtils');
 const cache = require('../utils/cache');
+const { parseSubjectString, extractAnyOtherFromGroups } = require('../utils/knecGroups');
 
 class MatchingService {
   static async findMatches(resultId) {
@@ -26,12 +27,12 @@ class MatchingService {
     `);
     const courses = coursesRes.rows;
 
-    // 3b. Fetch ALL requirements at once (bulk)
-    const allReqsRes = await db.query('SELECT * FROM course_requirements');
-    const reqsByCourse = {};
-    for (const req of allReqsRes.rows) {
-      if (!reqsByCourse[req.course_id]) reqsByCourse[req.course_id] = [];
-      reqsByCourse[req.course_id].push(req);
+    // 3b. Fetch cluster requirements natively
+    const allClustersRes = await db.query('SELECT * FROM course_cluster_subjects ORDER BY position ASC');
+    const clustersByCourse = {};
+    for (const c of allClustersRes.rows) {
+      if (!clustersByCourse[c.course_id]) clustersByCourse[c.course_id] = [];
+      clustersByCourse[c.course_id].push(c);
     }
 
     const matches = [];
@@ -41,55 +42,70 @@ class MatchingService {
     const bulkCourseIds = [];
     const bulkStatuses = [];
     const bulkReasons = [];
+    const bulkComputed = [];
+    const bulkCutOff = [];
+
+    const t = studentResult.aggregate_points || 0;
 
     // 4. For each course, check eligibility entirely IN-MEMORY
     for (const course of courses) {
-      const requirements = reqsByCourse[course.id] || [];
+      const clusters = clustersByCourse[course.id] || [];
 
-      let isEligible = true;
+      let r = 0;
+      let usedSubjects = [];
       let detailedReasons = [];
 
-      if (requirements.length > 0) {
-        for (const req of requirements) {
-          const studentGrade = studentSubjects[req.subject_code];
-          
-          const requirementDetail = {
-            subject: req.subject_code,
-            required: req.min_grade,
-            student: studentGrade || '--',
-            status: 'pending',
-            message: ''
-          };
-
-          if (!studentGrade) {
-            isEligible = false;
-            requirementDetail.status = 'failed';
-            requirementDetail.message = `Missing required subject: ${req.subject_code}`;
-          } else {
-            const studentPoints = calculatePoints(studentGrade);
-            const requiredPoints = calculatePoints(req.min_grade);
-            
-            if (studentPoints < requiredPoints) {
-              isEligible = false;
-              requirementDetail.status = 'failed';
-              requirementDetail.message = `${req.subject_code} grade ${studentGrade} is below required ${req.min_grade}`;
-            } else {
-              requirementDetail.status = 'met';
-              requirementDetail.message = `${req.subject_code} requirement met`;
-            }
+      if (clusters.length > 0) {
+        for (const req of clusters) {
+          let possibleCodes = parseSubjectString(req.subject);
+          if (req.subject.toLowerCase().includes('any')) {
+             possibleCodes = extractAnyOtherFromGroups(req.subject, usedSubjects);
           }
-          detailedReasons.push(requirementDetail);
+
+          let bestCode = null;
+          let bestPoints = -1;
+
+          for (const code of possibleCodes) {
+             if (!usedSubjects.includes(code) && studentSubjects[code]) {
+                 const pts = calculatePoints(studentSubjects[code]);
+                 if (pts > bestPoints) {
+                     bestPoints = pts;
+                     bestCode = code;
+                 }
+             }
+          }
+
+          if (bestCode) {
+             r += bestPoints;
+             usedSubjects.push(bestCode);
+             detailedReasons.push(`Assigned ${bestCode} (${bestPoints} pts) for Cluster: ${req.subject}`);
+          } else {
+             detailedReasons.push(`Missing valid subject for Cluster: ${req.subject}`);
+          }
         }
+      } else {
+         detailedReasons.push('No clusters registered for this course.');
       }
+
+      // Mathematical computation: C = (r * t) / 84
+      const computedPoints = Number(((r * t) / 84).toFixed(3));
+      const cutOffPoints = Number(course.cut_off_points || 0);
+      const isEligible = computedPoints >= cutOffPoints && clusters.length > 0;
+      
+      const reasonStr = isEligible 
+          ? `You exceeded the cut-off by ${(computedPoints - cutOffPoints).toFixed(3)} points.` 
+          : `You missed the cut-off by ${(cutOffPoints - computedPoints).toFixed(3)} points (Your C: ${computedPoints}, Needed: ${cutOffPoints}).`;
 
       const match = {
         course_id: course.id,
         course_name: course.name,
         university_name: course.university_name,
         university_location: course.university_location,
+        computed_points: computedPoints,
+        cut_off_points: cutOffPoints,
         eligibility_status: isEligible ? 'eligible' : 'ineligible',
-        detailed_reasons: detailedReasons,
-        reason: JSON.stringify(detailedReasons)
+        reason: reasonStr,
+        detailed_reasons: detailedReasons
       };
 
       matches.push(match);
@@ -98,17 +114,19 @@ class MatchingService {
       bulkCourseIds.push(course.id);
       bulkStatuses.push(match.eligibility_status);
       bulkReasons.push(match.reason);
+      bulkComputed.push(match.computed_points);
+      bulkCutOff.push(match.cut_off_points);
     }
 
     // 5. Save/Update ALL matches in ONE single bulk database trip
     if (matches.length > 0) {
       const upsertQuery = `
-        INSERT INTO eligibility_matches (student_result_id, course_id, eligibility_status, reason)
-        SELECT * FROM UNNEST ($1::uuid[], $2::uuid[], $3::varchar[], $4::text[])
+        INSERT INTO eligibility_matches (student_result_id, course_id, eligibility_status, reason, computed_points, cut_off_points)
+        SELECT * FROM UNNEST ($1::uuid[], $2::uuid[], $3::varchar[], $4::text[], $5::decimal[], $6::decimal[])
         ON CONFLICT (student_result_id, course_id) DO UPDATE 
-        SET eligibility_status = EXCLUDED.eligibility_status, reason = EXCLUDED.reason
+        SET eligibility_status = EXCLUDED.eligibility_status, reason = EXCLUDED.reason, computed_points = EXCLUDED.computed_points, cut_off_points = EXCLUDED.cut_off_points
       `;
-      await db.query(upsertQuery, [bulkStudentResultIds, bulkCourseIds, bulkStatuses, bulkReasons]);
+      await db.query(upsertQuery, [bulkStudentResultIds, bulkCourseIds, bulkStatuses, bulkReasons, bulkComputed, bulkCutOff]);
     }
 
     // 6. Cache the final matches array

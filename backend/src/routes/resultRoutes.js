@@ -11,7 +11,7 @@ const crypto = require('crypto');
 // @desc    Manual entry of KCSE results
 // @access  Public
 router.post('/manual', auth, validate(resultSchemas.manual), async (req, res) => {
-  const { subjects, meanGrade, meanPoints } = req.body;
+  const { subjects, meanGrade, meanPoints, aggregatePoints } = req.body;
 
   if (!subjects || Object.keys(subjects).length < 7) {
     return res.status(400).json({ error: 'Please provide at least 7 subjects' });
@@ -29,6 +29,7 @@ router.post('/manual', auth, validate(resultSchemas.manual), async (req, res) =>
       mean_grade: meanGrade || '--',
       mean_points: meanPoints || (totalPoints / Object.keys(subjects).length).toFixed(2),
       total_points: totalPoints,
+      aggregate_points: aggregatePoints,
       subjects
     });
 

@@ -35,6 +35,9 @@ const authSchemas = {
 
 const resultSchemas = {
   manual: [
+    body('aggregatePoints')
+      .notEmpty().withMessage('Aggregate points is required')
+      .isInt({ min: 0, max: 84 }).withMessage('Must be an integer between 0 and 84'),
     body('subjects').isObject().withMessage('Subjects must be an object'),
     body('subjects.*').isIn(['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E']).withMessage('Invalid grade'),
     body('meanGrade').optional().isIn(['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E']).withMessage('Invalid mean grade')

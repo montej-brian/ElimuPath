@@ -25,6 +25,7 @@ const ManualEntryPage = () => {
     grade: 'C+', 
     id: Math.random().toString(36).substr(2, 9) 
   }]);
+  const [aggregatePoints, setAggregatePoints] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -62,8 +63,17 @@ const ManualEntryPage = () => {
       subjectsMap[s.subject_code] = s.grade;
     });
 
+    if (!aggregatePoints || isNaN(aggregatePoints) || aggregatePoints < 0 || aggregatePoints > 84) {
+      setError('Please provide a valid overall KCSE aggregate point (0-84).');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await api.post('/api/results/manual', { subjects: subjectsMap });
+      const res = await api.post('/api/results/manual', { 
+        subjects: subjectsMap,
+        aggregatePoints: parseInt(aggregatePoints, 10)
+      });
       const resultData = res.data.data || res.data;
       sessionStorage.setItem('lastResult', JSON.stringify(resultData));
       navigate(`/results?id=${resultData.id}`);
@@ -96,6 +106,23 @@ const ManualEntryPage = () => {
            <Sparkles className="absolute -top-10 -right-10 w-40 h-40 text-primary/5 rotate-12" />
 
            <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
+              
+              <div className="bg-slate-50/80 p-6 rounded-3xl border border-blue-100 mb-8 max-w-sm">
+                <label className="block text-xs font-black uppercase text-slate-500 tracking-widest mb-2 pl-2">
+                  Official KCSE Aggregate Points (Max 84)
+                </label>
+                <input
+                  type="number"
+                  placeholder="e.g. 74"
+                  min="0"
+                  max="84"
+                  value={aggregatePoints}
+                  onChange={(e) => setAggregatePoints(e.target.value)}
+                  className="w-full bg-white border-2 border-slate-200 rounded-2xl py-4 px-5 outline-none focus:border-primary font-black text-xl text-slate-900 transition-all placeholder:text-slate-300"
+                  required
+                />
+              </div>
+
               <div className="space-y-4">
                  <AnimatePresence initial={false}>
                     {selectedSubjects.map((s) => (
