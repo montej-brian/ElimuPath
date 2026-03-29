@@ -120,7 +120,7 @@ const ResultsPage = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('default');
-  const [selectedMatch, setSelectedMatch] = useState(null);
+  const [selectedYear, setSelectedYear] = useState('2024');
   const resultId = searchParams.get('id');
 
   const fetchMatches = React.useCallback(async () => {
@@ -140,7 +140,7 @@ const ResultsPage = () => {
     if (resultId) {
       fetchMatches();
     }
-  }, [resultId, page, fetchMatches]);
+  }, [resultId, page, selectedYear, fetchMatches]);
 
   const filteredMatches = matches.filter(m => {
     if (filter === 'all') return true;
@@ -168,9 +168,24 @@ const ResultsPage = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="space-y-2">
             <h1 className="text-5xl font-black text-slate-900">Your Eligibility Paths</h1>
-            <p className="text-slate-500 font-medium">We've found {total} potential courses for you.</p>
+            <p className="text-slate-500 font-medium tracking-tight">Eligibility analysis for the <span className="text-primary font-bold">{selectedYear}</span> admission cycle.</p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="relative group">
+              <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-primary transition-colors" />
+              <select
+                value={selectedYear}
+                onChange={(e) => {
+                  setSelectedYear(e.target.value);
+                  setPage(1);
+                }}
+                className="pl-11 pr-10 py-3 bg-white rounded-xl font-black text-xs uppercase tracking-widest text-slate-700 border border-slate-100 shadow-sm outline-none hover:border-primary transition-all cursor-pointer appearance-none"
+              >
+                <option value="2024">2024 Cycle</option>
+                <option value="2023">2023 Cycle</option>
+                <option value="2022">2022 Cycle</option>
+              </select>
+            </div>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}

@@ -56,6 +56,10 @@ const Dashboard = () => {
             <PlusCircle className="w-5 h-5" />
             New Analysis
           </Link>
+          <Link to="/upload" className="flex items-center justify-center gap-2 w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-500/25 hover:bg-emerald-700 transition-all">
+            <BookOpen className="w-5 h-5" />
+            Upload Result Slip
+          </Link>
         </aside>
 
         {/* Main Content */}

@@ -79,9 +79,9 @@ router.get('/courses', auth, adminOnly, async (req, res) => {
     const result = await db.query(`
       SELECT c.*, u.name as university_name,
         COALESCE(
-          (SELECT json_agg(json_build_object('subject_code', cr.subject_code, 'min_grade', cr.min_grade, 'cluster_weight', cr.cluster_weight))
-           FROM course_requirements cr WHERE cr.course_id = c.id), '[]'::json
-        ) as requirements
+          (SELECT json_agg(css.subject ORDER BY css.position ASC)
+           FROM course_cluster_subjects css WHERE css.course_id = c.id), '[]'::json
+        ) as clusters
       FROM courses c 
       JOIN universities u ON c.university_id = u.id 
       ORDER BY u.name ASC, c.name ASC
@@ -94,11 +94,11 @@ router.get('/courses', auth, adminOnly, async (req, res) => {
 
 // @route   POST /api/admin/courses
 router.post('/courses', auth, adminOnly, validate(adminSchemas.course), async (req, res) => {
-  const { university_id, name, type, description, duration } = req.body;
+  const { university_id, name, type, description, duration, cut_off_points } = req.body;
   try {
     const result = await db.query(
-      'INSERT INTO courses (university_id, name, type, description, duration) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [university_id, name, type, description, duration]
+      'INSERT INTO courses (university_id, name, type, description, duration, cut_off_points) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [university_id, name, type, description, duration, cut_off_points || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -108,11 +108,11 @@ router.post('/courses', auth, adminOnly, validate(adminSchemas.course), async (r
 
 // @route   PUT /api/admin/courses/:id
 router.put('/courses/:id', auth, adminOnly, validate(adminSchemas.course), async (req, res) => {
-  const { name, type, description, duration } = req.body;
+  const { name, type, description, duration, cut_off_points } = req.body;
   try {
     const result = await db.query(
-      'UPDATE courses SET name = $1, type = $2, description = $3, duration = $4 WHERE id = $5 RETURNING *',
-      [name, type, description, duration, req.params.id]
+      'UPDATE courses SET name = $1, type = $2, description = $3, duration = $4, cut_off_points = $5 WHERE id = $6 RETURNING *',
+      [name, type, description, duration, cut_off_points || null, req.params.id]
     );
     // Invalidate cache
     await cache.invalidateRequirements(req.params.id);
@@ -133,46 +133,80 @@ router.delete('/courses/:id', auth, adminOnly, async (req, res) => {
   }
 });
 
-// @route   GET /api/admin/courses/:id/requirements
-router.get('/courses/:id/requirements', auth, adminOnly, async (req, res) => {
+// @route   GET /api/admin/courses/:id/clusters
+router.get('/courses/:id/clusters', auth, adminOnly, async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM course_requirements WHERE course_id = $1', [req.params.id]);
-    res.json(result.rows);
+    const result = await db.query('SELECT subject FROM course_cluster_subjects WHERE course_id = $1 ORDER BY position ASC', [req.params.id]);
+    res.json(result.rows.map(r => r.subject));
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch requirements' });
+    res.status(500).json({ error: 'Failed to fetch clusters' });
   }
 });
 
-// @route   POST /api/admin/courses/:id/requirements
-router.post('/courses/:id/requirements', auth, adminOnly, async (req, res) => {
-  const { subject_code, min_grade, cluster_weight } = req.body;
+// @route   PUT /api/admin/courses/:id/clusters
+router.put('/courses/:id/clusters', auth, adminOnly, validate(adminSchemas.clusters), async (req, res) => {
+  const { subjects } = req.body; // Array of 4 strings
   try {
-    const result = await db.query(
-      'INSERT INTO course_requirements (course_id, subject_code, min_grade, cluster_weight) VALUES ($1, $2, $3, $4) RETURNING *',
-      [req.params.id, subject_code, min_grade, cluster_weight]
-    );
-    // Invalidate cache
+    await db.query('BEGIN');
+    await db.query('DELETE FROM course_cluster_subjects WHERE course_id = $1', [req.params.id]);
+    
+    for (let i = 0; i < subjects.length; i++) {
+        await db.query(
+          'INSERT INTO course_cluster_subjects (course_id, subject, position) VALUES ($1, $2, $3)',
+          [req.params.id, subjects[i], i + 1]
+        );
+    }
+    
+    await db.query('COMMIT');
+    
+    // Invalidate caches
     await cache.invalidateRequirements(req.params.id);
+    await cache.clearAll();
+    
+    res.json({ message: 'Clusters updated successfully' });
+  } catch (err) {
+    await db.query('ROLLBACK');
+    res.status(500).json({ error: 'Failed to update clusters' });
+  }
+});
+
+// @route   GET /api/admin/courses/:id/cutoffs
+router.get('/courses/:id/cutoffs', auth, adminOnly, async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM course_cutoffs WHERE course_id = $1 ORDER BY year DESC', [req.params.id]);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch course cut-offs' });
+  }
+});
+
+// @route   POST /api/admin/courses/:id/cutoffs
+router.post('/courses/:id/cutoffs', auth, adminOnly, validate(adminSchemas.cutoffYear), async (req, res) => {
+  const { year, cut_off_points } = req.body;
+  try {
+    const result = await db.query(`
+      INSERT INTO course_cutoffs (course_id, year, cut_off_points)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (course_id, year) 
+      DO UPDATE SET cut_off_points = EXCLUDED.cut_off_points, updated_at = CURRENT_TIMESTAMP
+      RETURNING *
+    `, [req.params.id, year, cut_off_points]);
+    
     await cache.clearAll();
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to create requirement' });
+    res.status(500).json({ error: 'Failed to save cut-off point' });
   }
 });
 
-// @route   DELETE /api/admin/requirements/:id
-router.delete('/requirements/:id', auth, adminOnly, async (req, res) => {
+// @route   DELETE /api/admin/cutoffs/:id
+router.delete('/cutoffs/:id', auth, adminOnly, async (req, res) => {
   try {
-    // Get course_id before deleting
-    const reqInfo = await db.query('SELECT course_id FROM course_requirements WHERE id = $1', [req.params.id]);
-    if (reqInfo.rows[0]) {
-      await cache.invalidateRequirements(reqInfo.rows[0].course_id);
-      await cache.clearAll();
-    }
-    await db.query('DELETE FROM course_requirements WHERE id = $1', [req.params.id]);
-    res.json({ message: 'Requirement deleted' });
+    await db.query('DELETE FROM course_cutoffs WHERE id = $1', [req.params.id]);
+    await cache.clearAll();
+    res.json({ message: 'Cut-off record removed' });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to delete requirement' });
+    res.status(500).json({ error: 'Failed to delete cut-off record' });
   }
 });
 

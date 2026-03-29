@@ -38,9 +38,11 @@ const historyRoutes = require('./routes/historyRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const associateRoutes = require('./routes/associateRoutes');
 const publicRoutes = require('./routes/publicRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 app.use('/auth', authRoutes);
 app.use('/api/results', resultRoutes);
+app.use('/api/results', uploadRoutes);
 app.use('/api/results', associateRoutes);
 app.use('/api/results', historyRoutes);
 app.use('/api/matches', matchRoutes);

@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ManualEntryPage from './pages/ManualEntryPage';
+import OCRUploadPage from './pages/OCRUploadPage';
 import ResultsPage from './pages/ResultsPage';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
@@ -54,6 +55,7 @@ function App() {
                 <Route path="/forgot" element={<ForgotPassword />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/manual-entry" element={<ManualEntryPage />} />
+                <Route path="/upload" element={<OCRUploadPage />} />
                 <Route path="/results" element={<ResultsPage />} />
                 <Route path="/universities" element={<UniversitiesPage />} />
                 <Route path="/courses" element={<CoursesPage />} />

@@ -40,4 +40,27 @@ router.post('/manual', auth, validate(resultSchemas.manual), async (req, res) =>
   }
 });
 
+// @route   POST /api/results/associate
+// @desc    Associate guest results with a newly logged in user
+// @access  Private
+router.post('/associate', auth, async (req, res) => {
+  const { sessionId } = req.body;
+  if (!sessionId) return res.status(400).json({ error: 'Session ID required.' });
+  
+  if (!req.user || !req.user.id) return res.status(401).json({ error: 'User must be authenticated.' });
+
+  try {
+    const db = require('../config/db');
+    const result = await db.query(
+      'UPDATE student_results SET user_id = $1, session_id = NULL WHERE session_id = $2 AND user_id IS NULL RETURNING id',
+      [req.user.id, sessionId]
+    );
+    
+    res.json({ message: 'Results associated successfully', rowsUpdated: result.rowCount });
+  } catch (err) {
+    console.error('Error associating results:', err);
+    res.status(500).json({ error: 'Failed to associate results' });
+  }
+});
+
 module.exports = router;

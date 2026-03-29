@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Plus, Edit2, Trash2, Building, GraduationCap, X, Save, AlertCircle, BookmarkPlus, Loader2, Upload, FileText } from 'lucide-react';
+import { Plus, Edit2, Trash2, Building, GraduationCap, X, Save, AlertCircle, BookmarkPlus, Loader2, Upload, FileText, History, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'];
@@ -15,7 +15,8 @@ const AdminPanel = () => {
   // Modal states
   const [showUniModal, setShowUniModal] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
-  const [showReqModal, setShowReqModal] = useState(false);
+  const [showClusterModal, setShowClusterModal] = useState(false);
+  const [showCutoffModal, setShowCutoffModal] = useState(false);
   
   const [editingItem, setEditingItem] = useState(null);
   const [activeCourse, setActiveCourse] = useState(null);
@@ -126,23 +127,29 @@ const AdminPanel = () => {
                     <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{c.university_name}</p>
                     <h3 className="text-xl font-black">{c.name}</h3>
                     <p className="text-sm text-slate-500 font-medium">{c.type} • {c.duration}</p>
-                    {c.requirements && c.requirements.length > 0 && (
+                    {c.clusters && c.clusters.length > 0 && (
                       <div className="flex flex-wrap gap-2 pt-2">
-                        {c.requirements.map((req, i) => (
+                        {c.clusters.map((cluster, i) => (
                           <span key={i} className="text-[10px] font-black tracking-widest bg-blue-50 text-primary px-2 py-1 rounded-md">
-                            {req.subject_code}: {req.min_grade}
+                            {cluster}
                           </span>
                         ))}
                       </div>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => { setActiveCourse(c); setShowReqModal(true); }}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-primary rounded-xl font-bold text-sm hover:bg-primary hover:text-white transition-all"
-                    >
-                      <BookmarkPlus className="w-4 h-4" /> Requirements
-                    </button>
+                      <button 
+                        onClick={() => { setActiveCourse(c); setShowClusterModal(true); }}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-primary rounded-xl font-bold text-sm hover:bg-primary hover:text-white transition-all"
+                      >
+                        <BookmarkPlus className="w-4 h-4" /> Clusters
+                      </button>
+                      <button 
+                        onClick={() => { setActiveCourse(c); setShowCutoffModal(true); }}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all"
+                      >
+                        <History className="w-4 h-4" /> Cut-offs
+                      </button>
                     <div className="flex gap-1 border-l border-slate-100 pl-2">
                        <button onClick={() => { setEditingItem(c); setShowCourseModal(true); }} className="p-2 text-slate-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-all"><Edit2 className="w-4 h-4" /></button>
                        <button onClick={() => handleDeleteCourse(c.id)} className="p-2 text-slate-400 hover:text-secondary hover:bg-red-50 rounded-lg transition-all"><Trash2 className="w-4 h-4" /></button>
@@ -169,7 +176,8 @@ const AdminPanel = () => {
       {/* Modals Implementation (Abbreviated logic for brevity but fully functional in final write) */}
       <UniversityModal show={showUniModal} onClose={() => setShowUniModal(false)} onSave={fetchData} editing={editingItem} />
       <CourseModal show={showCourseModal} onClose={() => setShowCourseModal(false)} onSave={fetchData} universities={universities} editing={editingItem} />
-      <RequirementsModal show={showReqModal} onClose={() => setShowReqModal(false)} course={activeCourse} />
+      <ClusterSubjectsModal show={showClusterModal} onClose={() => setShowClusterModal(false)} course={activeCourse} onSave={fetchData} />
+      <HistoricalCutoffsModal show={showCutoffModal} onClose={() => setShowCutoffModal(false)} course={activeCourse} />
     </div>
   );
 };
@@ -238,11 +246,11 @@ const UniversityModal = ({ show, onClose, onSave, editing }) => {
 };
 
 const CourseModal = ({ show, onClose, onSave, universities, editing }) => {
-  const [formData, setFormData] = useState({ university_id: '', name: '', type: 'Degree', description: '', duration: '' });
+  const [formData, setFormData] = useState({ university_id: '', name: '', type: 'Degree', description: '', duration: '', cut_off_points: '' });
   
   useEffect(() => {
     if (show) {
-      setFormData(editing || { university_id: universities[0]?.id || '', name: '', type: 'Degree', description: '', duration: '' });
+      setFormData(editing || { university_id: universities[0]?.id || '', name: '', type: 'Degree', description: '', duration: '', cut_off_points: '' });
     }
   }, [editing, show, universities]);
 
@@ -282,92 +290,125 @@ const CourseModal = ({ show, onClose, onSave, universities, editing }) => {
             <input required placeholder="e.g. 4 years" className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 outline-none" value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})} />
           </div>
         </div>
+        <div className="space-y-1">
+          <label className="text-xs font-black uppercase text-slate-400">KUCCPS Cut-off Points</label>
+          <input type="number" step="0.001" min="0" max="84" placeholder="e.g. 42.560" className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-primary" value={formData.cut_off_points || ''} onChange={e => setFormData({...formData, cut_off_points: e.target.value})} />
+        </div>
         <button type="submit" className="w-full bg-primary text-white py-4 rounded-xl font-black text-lg shadow-xl shadow-blue-500/20 hover:bg-primary-dark transition-all">Save Course</button>
       </form>
     </Modal>
   );
 };
 
-const RequirementsModal = ({ show, onClose, course }) => {
-  const [reqs, setReqs] = useState([]);
-  const [formData, setFormData] = useState({ subject_code: 'MAT', min_grade: 'C+', cluster_weight: 1.0 });
+const KUCCPS_GROUPS = [
+  'Mathematics', 'English / Kiswahili', 'Biology / Physics / Chemistry',
+  'Any Other Group II Subject', 'Any Other Group III Subject',
+  'Any Other Group IV Subject', 'Any Other Group V Subject',
+  'Any Other Group II / III / IV / V Subject', 'Any Group III / IV / V Subject', 'Any Subject'
+];
 
-  const fetchReqs = React.useCallback(async () => {
-    if (!course) return;
-    try {
-      const res = await api.get(`/api/admin/courses/${course.id}/requirements`);
-      if (Array.isArray(res.data)) {
-        setReqs(res.data);
-      } else {
-        setReqs([]);
-      }
-    } catch (err) {
-      console.error('Failed to fetch requirements modal', err);
-      setReqs([]);
-    }
-  }, [course]);
+const ClusterSubjectsModal = ({ show, onClose, course, onSave }) => {
+  const [subjects, setSubjects] = useState(['', '', '', '']);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (course && show) fetchReqs();
-  }, [course, show, fetchReqs]);
+    if (show && course) {
+      const fetchClusters = async () => {
+        try {
+          const res = await api.get(`/api/admin/courses/${course.id}/clusters`);
+          if (Array.isArray(res.data) && res.data.length === 4) setSubjects(res.data);
+          else if (Array.isArray(res.data) && res.data.length > 0) {
+            const padded = [...res.data];
+            while (padded.length < 4) padded.push('');
+            setSubjects(padded.slice(0, 4));
+          } else {
+            setSubjects(['', '', '', '']);
+          }
+        } catch (_err) { setSubjects(['', '', '', '']); }
+      };
+      fetchClusters();
+    }
+  }, [course, show]);
 
-  const handleAdd = async (e) => {
-    e.preventDefault();
-    await api.post(`/api/admin/courses/${course.id}/requirements`, formData);
-    fetchReqs();
+  const handleChange = (index, value) => {
+    const newSubs = [...subjects];
+    newSubs[index] = value;
+    setSubjects(newSubs);
   };
 
-  const handleDelete = async (id) => {
-    await api.delete(`/api/admin/requirements/${id}`);
-    fetchReqs();
+  const swap = (indexA, indexB) => {
+    const newSubs = [...subjects];
+    const temp = newSubs[indexA];
+    newSubs[indexA] = newSubs[indexB];
+    newSubs[indexB] = temp;
+    setSubjects(newSubs);
+  };
+
+  const handleSave = async () => {
+    // Validation
+    const trimmed = subjects.map(s => s.trim());
+    if (trimmed.some(s => s === '')) {
+      alert('All 4 clusters must be populated.');
+      return;
+    }
+    if (new Set(trimmed).size !== 4) {
+      alert('Duplicate clusters are not permitted. KUCCPS requires 4 distinct selection pools.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await api.put(`/api/admin/courses/${course.id}/clusters`, { subjects: trimmed });
+      if (onSave) onSave();
+      onClose();
+    } catch (err) {
+      alert(err.response?.data?.errors?.[0]?.msg || 'Failed to save cluster properties.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <Modal show={show} title={`Requirements: ${course?.name}`} onClose={onClose}>
-      <div className="space-y-6">
-        <form onSubmit={handleAdd} className="p-4 bg-slate-50 rounded-2xl space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-black uppercase text-slate-400 pl-1">Subject</label>
-              <select className="w-full bg-white border border-slate-200 rounded-lg p-3 outline-none focus:border-primary" value={formData.subject_code} onChange={e => setFormData({...formData, subject_code: e.target.value})}>
-                {subjects.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-black uppercase text-slate-400 pl-1">Min Grade</label>
-              <select className="w-full bg-white border border-slate-200 rounded-lg p-3 outline-none focus:border-primary" value={formData.min_grade} onChange={e => setFormData({...formData, min_grade: e.target.value})}>
-                {grades.map(g => <option key={g}>{g}</option>)}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-black uppercase text-slate-400 pl-1">Weight</label>
-              <input type="number" step="0.01" className="w-full bg-white border border-slate-200 rounded-lg p-3 outline-none focus:border-primary" value={formData.cluster_weight} onChange={e => setFormData({...formData, cluster_weight: e.target.value})} />
-            </div>
-          </div>
-          <button type="submit" className="w-full bg-slate-900 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all">
-            <Plus className="w-4 h-4" /> Add Required Subject
-          </button>
-        </form>
+    <Modal show={show} title={`Cluster Subjects: ${course?.name}`} onClose={onClose}>
+      <datalist id="kuccps_group_suggestions">
+        {KUCCPS_GROUPS.map(opt => <option key={opt} value={opt} />)}
+      </datalist>
 
-        <div className="space-y-2">
-          {Array.isArray(reqs) && reqs.map(r => (
-            <div key={r.id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
-              <div className="flex items-center gap-4">
-                <span className="w-12 h-12 bg-blue-50 text-primary rounded-xl flex items-center justify-center font-black">{r.subject_code}</span>
-                <div className="flex flex-col">
-                  <span className="font-bold text-slate-700">Min Grade: {r.min_grade}</span>
-                  {r.cluster_weight && <span className="text-xs text-slate-500 font-medium tracking-wide">Weight: {r.cluster_weight}</span>}
-                </div>
+      <div className="space-y-4">
+        <p className="text-sm font-medium text-slate-500 mb-6">
+          Define exactly 4 subject clusters. Our engine naturally understands KNEC grouping rules (e.g. <span className="text-primary font-bold">Group III</span>). Use standard naming defaults to enable mathematical parsing.
+        </p>
+        
+        <div className="space-y-3">
+          {subjects.map((sub, idx) => (
+            <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+              <span className="w-8 flex justify-center text-xs font-black text-slate-400">#{idx + 1}</span>
+              <input
+                className="flex-1 bg-white border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-primary text-sm font-bold shadow-sm"
+                placeholder="e.g. Mathematics"
+                list="kuccps_group_suggestions"
+                value={sub}
+                onChange={(e) => handleChange(idx, e.target.value)}
+              />
+              <div className="flex gap-1 shrink-0">
+                 <button disabled={idx === 0} onClick={() => swap(idx, idx - 1)} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 text-slate-500 disabled:opacity-30 disabled:hover:bg-white transition-all">
+                    ↑
+                 </button>
+                 <button disabled={idx === 3} onClick={() => swap(idx, idx + 1)} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 text-slate-500 disabled:opacity-30 disabled:hover:bg-white transition-all">
+                    ↓
+                 </button>
               </div>
-              <button type="button" onClick={() => handleDelete(r.id)} className="p-2 text-slate-400 hover:bg-red-50 hover:text-secondary rounded-lg transition-all"><Trash2 className="w-4 h-4" /></button>
             </div>
           ))}
-          {Array.isArray(reqs) && reqs.length === 0 && (
-            <div className="p-4 text-center text-slate-400 font-medium text-sm border border-slate-100 border-dashed rounded-2xl">
-              No manual requirements configured.
-            </div>
-          )}
         </div>
+
+        <button 
+          onClick={handleSave} 
+          disabled={isSaving}
+          className="w-full mt-8 bg-slate-900 text-white py-4 rounded-xl font-black text-lg shadow-xl hover:bg-black disabled:opacity-50 transition-all flex justify-center items-center gap-2"
+        >
+          {isSaving ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Save className="w-5 h-5"/> Sync 4-Cluster Rule</>}
+        </button>
       </div>
     </Modal>
   );
@@ -427,6 +468,109 @@ const BulkImportCard = ({ title, description, endpoint, onSave }) => {
         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Upload className="w-4 h-4" /> Import CSV</>}
       </button>
     </div>
+  );
+};
+
+const HistoricalCutoffsModal = ({ show, onClose, course }) => {
+  const [cutoffs, setCutoffs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [newCutoff, setNewCutoff] = useState({ year: new Date().getFullYear(), cut_off_points: '' });
+
+  const fetchCutoffs = React.useCallback(async () => {
+    if (!course) return;
+    setLoading(true);
+    try {
+      const res = await api.get(`/api/admin/courses/${course.id}/cutoffs`);
+      setCutoffs(res.data);
+    } catch (_err) {
+      console.error('Failed to fetch cutoffs');
+    } finally {
+      setLoading(false);
+    }
+  }, [course]);
+
+  useEffect(() => {
+    if (show && course) fetchCutoffs();
+  }, [show, course, fetchCutoffs]);
+
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post(`/api/admin/courses/${course.id}/cutoffs`, newCutoff);
+      setNewCutoff({ year: new Date().getFullYear(), cut_off_points: '' });
+      fetchCutoffs();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Save failed');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this record?')) return;
+    try {
+      await api.delete(`/api/admin/cutoffs/${id}`);
+      fetchCutoffs();
+    } catch (err) {
+      alert('Delete failed');
+    }
+  };
+
+  return (
+    <Modal show={show} title={`Cut-offs: ${course?.name}`} onClose={onClose}>
+      <div className="space-y-6">
+        <form onSubmit={handleAdd} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-end gap-3">
+          <div className="flex-1 space-y-1">
+            <label className="text-[10px] font-black uppercase text-slate-400">Year</label>
+            <input 
+              type="number" 
+              required 
+              className="w-full bg-white border border-slate-200 rounded-xl py-2 px-3 outline-none focus:border-primary font-bold"
+              value={newCutoff.year}
+              onChange={e => setNewCutoff({...newCutoff, year: parseInt(e.target.value)})}
+            />
+          </div>
+          <div className="flex-1 space-y-1">
+            <label className="text-[10px] font-black uppercase text-slate-400">Points</label>
+            <input 
+              type="number" 
+              step="0.001" 
+              required 
+              className="w-full bg-white border border-slate-200 rounded-xl py-2 px-3 outline-none focus:border-primary font-bold"
+              value={newCutoff.cut_off_points}
+              onChange={e => setNewCutoff({...newCutoff, cut_off_points: e.target.value})}
+            />
+          </div>
+          <button type="submit" className="p-3 bg-primary text-white rounded-xl hover:bg-primary-dark transition-all shadow-lg shadow-blue-500/20">
+            <Plus className="w-5 h-5" />
+          </button>
+        </form>
+
+        <div className="space-y-2">
+          <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest pl-1">Historical Records</h4>
+          {loading ? (
+             <div className="py-8 text-center"><p className="text-slate-400 font-bold animate-pulse">Loading records...</p></div>
+          ) : cutoffs.length === 0 ? (
+             <div className="py-8 text-center"><p className="text-slate-400 font-bold">No historical data available.</p></div>
+          ) : (
+            <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2">
+              {cutoffs.map(item => (
+                <div key={item.id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl group hover:border-primary/30 transition-all">
+                  <div className="flex items-center gap-4">
+                    <span className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center font-black text-slate-600 text-sm">{item.year}</span>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-slate-400">Cut-off</p>
+                      <p className="font-black text-slate-700">{item.cut_off_points}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => handleDelete(item.id)} className="p-2 text-slate-300 hover:text-secondary hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </Modal>
   );
 };
 

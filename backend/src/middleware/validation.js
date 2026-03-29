@@ -55,7 +55,16 @@ const adminSchemas = {
     body('university_id').notEmpty().isUUID().withMessage('Invalid university ID'),
     body('name').trim().notEmpty().withMessage('Course name is required'),
     body('type').isIn(['Degree', 'Diploma', 'Certificate']).withMessage('Invalid course type'),
-    body('duration').trim().notEmpty().withMessage('Duration is required')
+    body('duration').trim().notEmpty().withMessage('Duration is required'),
+    body('cut_off_points').optional().isFloat({ min: 0, max: 84 }).withMessage('Cut-off points must be between 0 and 84')
+  ],
+  clusters: [
+    body('subjects').isArray({ min: 4, max: 4 }).withMessage('Exactly 4 cluster subjects are required'),
+    body('subjects.*').isString().notEmpty().withMessage('Each subject must be a valid string')
+  ],
+  cutoffYear: [
+    body('year').isInt({ min: 2000, max: 2100 }).withMessage('Year must be a valid integer'),
+    body('cut_off_points').isFloat({ min: 0, max: 84 }).withMessage('Cut-off points must be between 0 and 84')
   ]
 };
 

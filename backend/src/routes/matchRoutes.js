@@ -7,11 +7,9 @@ const db = require('../config/db');
 // @desc    Get eligibility matches for a specific result
 // @access  Public (tracked by session or user)
 router.get('/:id/matches', async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
-  const offset = (page - 1) * limit;
-
   try {
-    const matches = await MatchingService.findMatches(req.params.id);
+    const { year } = req.query;
+    const matches = await MatchingService.findMatches(req.params.id, year);
     
     // Simple in-memory pagination for cached results
     const paginatedMatches = matches.slice(offset, offset + parseInt(limit));
@@ -20,6 +18,7 @@ router.get('/:id/matches', async (req, res) => {
       total: matches.length,
       page: parseInt(page),
       limit: parseInt(limit),
+      year: year || 'latest',
       data: paginatedMatches
     });
   } catch (err) {
@@ -37,7 +36,8 @@ router.get('/:id/points', async (req, res) => {
     if (studentRes.rows.length === 0) return res.status(404).json({ error: 'Result not found' });
     
     // We leverage the service which fully computes arrays in-memory instantly in O(1) bulk fetch
-    const matches = await MatchingService.findMatches(req.params.id);
+    const { year } = req.query;
+    const matches = await MatchingService.findMatches(req.params.id, year);
 
     const simplifiedCourses = matches.map(m => ({
       course_name: m.course_name,

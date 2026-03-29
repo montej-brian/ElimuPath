@@ -4,11 +4,12 @@ const cache = require('../utils/cache');
 const { parseSubjectString, extractAnyOtherFromGroups } = require('../utils/knecGroups');
 
 class MatchingService {
-  static async findMatches(resultId) {
+  static async findMatches(resultId, year = null) {
+    const cacheKey = year ? `${resultId}:${year}` : resultId;
     // 1. Check if final matches are already cached
-    const cachedMatches = await cache.getMatches(resultId);
+    const cachedMatches = await cache.getMatches(cacheKey);
     if (cachedMatches) {
-      console.log('⚡ Using cached matches for:', resultId);
+      console.log('⚡ Using cached matches for:', cacheKey);
       return cachedMatches;
     }
 
@@ -33,6 +34,28 @@ class MatchingService {
     for (const c of allClustersRes.rows) {
       if (!clustersByCourse[c.course_id]) clustersByCourse[c.course_id] = [];
       clustersByCourse[c.course_id].push(c);
+    }
+
+    // 3c. Fetch cut-offs for the specified year (or latest)
+    let cutoffsRes;
+    if (year) {
+      cutoffsRes = await db.query('SELECT course_id, cut_off_points FROM course_cutoffs WHERE year = $1', [year]);
+    } else {
+      // Default to latest year available in the system
+      cutoffsRes = await db.query(`
+        SELECT cc.course_id, cc.cut_off_points 
+        FROM course_cutoffs cc
+        INNER JOIN (
+          SELECT course_id, MAX(year) as max_year 
+          FROM course_cutoffs 
+          GROUP BY course_id
+        ) latest ON cc.course_id = latest.course_id AND cc.year = latest.max_year
+      `);
+    }
+
+    const cutoffsByCourse = {};
+    for (const row of cutoffsRes.rows) {
+      cutoffsByCourse[row.course_id] = row.cut_off_points;
     }
 
     const matches = [];
@@ -89,7 +112,7 @@ class MatchingService {
 
       // Mathematical computation: C = (r * t) / 84
       const computedPoints = Number(((r * t) / 84).toFixed(3));
-      const cutOffPoints = Number(course.cut_off_points || 0);
+      const cutOffPoints = Number(cutoffsByCourse[course.id] || course.cut_off_points || 0);
       const isEligible = computedPoints >= cutOffPoints && clusters.length > 0;
       
       const reasonStr = isEligible 
@@ -130,7 +153,7 @@ class MatchingService {
     }
 
     // 6. Cache the final matches array
-    await cache.setMatches(resultId, matches);
+    await cache.setMatches(cacheKey, matches);
 
     return matches;
   }
